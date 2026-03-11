@@ -1,5 +1,6 @@
-# Quality reports
+# Quality reports and configuration
 .quality-report.md
+.code-quality/
 
 # Build outputs
 dist/
