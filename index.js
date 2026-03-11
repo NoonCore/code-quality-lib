@@ -537,7 +537,7 @@ function generateConfigFile() {
     
     // Copy reference configs from library to .code-quality/
     const libConfigDir = path.join(__dirname, '.code-quality');
-    const referenceConfigs = ['tsconfig.json', 'eslint.config.mjs', '.prettierrc', 'knip.json', 'README.md'];
+    const referenceConfigs = ['tsconfig.json', 'eslint.config.mjs', '.prettierrc', '.prettierignore', 'knip.json', 'README.md'];
     
     for (const configFile of referenceConfigs) {
       const srcPath = path.join(libConfigDir, configFile);
@@ -752,7 +752,7 @@ async function runWizard() {
     
     // Copy reference configs from library to .code-quality/
     const libConfigDir = path.join(__dirname, '.code-quality');
-    const referenceConfigs = ['tsconfig.json', 'eslint.config.mjs', '.prettierrc', 'knip.json', 'README.md'];
+    const referenceConfigs = ['tsconfig.json', 'eslint.config.mjs', '.prettierrc', '.prettierignore', 'knip.json', 'README.md'];
     
     for (const configFile of referenceConfigs) {
       const srcPath = path.join(libConfigDir, configFile);
