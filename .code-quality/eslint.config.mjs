@@ -8,12 +8,20 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 
-// Try to import Next.js plugin if available, but don't fail if not
+// Try to import optional plugins if available, but don't fail if not
 let nextPlugin;
+let jsxA11yPlugin;
+
 try {
   nextPlugin = require('eslint-plugin-next');
 } catch (e) {
   // Next.js plugin not available, continue without it
+}
+
+try {
+  jsxA11yPlugin = require('eslint-plugin-jsx-a11y');
+} catch (e) {
+  // jsx-a11y plugin not available, continue without it
 }
 
 const eslintConfig = [
@@ -83,6 +91,7 @@ const eslintConfig = [
       unicorn,
       import: importPlugin,
       ...(nextPlugin ? { '@next/next': nextPlugin } : {}),
+      ...(jsxA11yPlugin ? { 'jsx-a11y': jsxA11yPlugin } : {}),
     },
     rules: {
       // React
@@ -128,11 +137,13 @@ const eslintConfig = [
         '@next/next/no-sync-scripts': 'warn',
       } : {}),
 
-      // Accessibility
-      'jsx-a11y/alt-text': 'warn',
-      'jsx-a11y/interactive-supports-focus': 'off',
-      'jsx-a11y/click-events-have-key-events': 'warn',
-      'jsx-a11y/no-static-element-interactions': 'warn',
+      // Accessibility (if jsx-a11y plugin available)
+      ...(jsxA11yPlugin ? {
+        'jsx-a11y/alt-text': 'warn',
+        'jsx-a11y/interactive-supports-focus': 'off',
+        'jsx-a11y/click-events-have-key-events': 'warn',
+        'jsx-a11y/no-static-element-interactions': 'warn',
+      } : {}),
 
       // Import ordering
       'import/order': [
