@@ -7,8 +7,13 @@
     "code-quality": "index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "test": "node test/basic.test.js",
+    "test:ci": "node test/basic.test.js",
+    "start": "node index.js",
+    "lint": "echo 'Linting not configured yet'",
+    "format": "echo 'Formatting not configured yet'",
+    "build": "echo 'No build step required'",
+    "prepublishOnly": "npm test"
   },
   "keywords": [
     "code-quality",
@@ -24,5 +29,19 @@
   "type": "commonjs",
   "engines": {
     "node": ">=14.0.0"
-  }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NoonCore/code-quality-lib.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NoonCore/code-quality-lib/issues"
+  },
+  "homepage": "https://github.com/NoonCore/code-quality-lib#readme"
 }
