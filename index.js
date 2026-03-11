@@ -799,6 +799,11 @@ if (require.main === module) {
     console.log('  --config       Generate .code-quality.json configuration file');
     console.log('  --wizard       Run interactive setup wizard');
     console.log('  --env <name>   Set environment (development, ci, production)');
+    console.log('  --ESLint       Run only ESLint checks');
+    console.log('  --TypeScript   Run only TypeScript checks');
+    console.log('  --Prettier     Run only Prettier checks');
+    console.log('  --Knip         Run only Knip checks');
+    console.log('  --Snyk         Run only Snyk checks');
     console.log('');
     console.log('Examples:');
     console.log('  code-quality                    # Run checks with defaults');
@@ -807,6 +812,10 @@ if (require.main === module) {
     console.log('  code-quality --logs              # Run with verbose output');
     console.log('  code-quality --env ci            # Run CI/CD checks (all tools)');
     console.log('  code-quality --env development   # Run dev checks (ESLint, TS, Prettier)');
+    console.log('  code-quality --ESLint            # Run only ESLint');
+    console.log('  code-quality --TypeScript        # Run only TypeScript');
+    console.log('  code-quality --Prettier          # Run only Prettier');
+    console.log('  code-quality --ESLint --logs     # Run ESLint with verbose output');
     console.log('');
     console.log('Environment Variables:');
     console.log('  NODE_ENV                        # Set environment automatically');
@@ -835,6 +844,62 @@ if (require.main === module) {
       process.exit(1);
     });
     return;
+  }
+
+  // Parse tool-specific flags
+  const toolFlags = ['--ESLint', '--TypeScript', '--Prettier', '--Knip', '--Snyk'];
+  const specificTools = args.filter(arg => toolFlags.includes(arg));
+  
+  // If specific tools are requested, run them directly
+  if (specificTools.length > 0) {
+    const config = loadConfigFile() || {};
+    
+    for (const toolFlag of specificTools) {
+      const toolName = toolFlag.replace('--', '');
+      const defaultTool = DEFAULT_TOOLS.find(t => t.name === toolName);
+      
+      if (!defaultTool) {
+        console.error(`❌ Unknown tool: ${toolName}`);
+        process.exit(1);
+      }
+      
+      console.log(`\n🔧 Running ${toolName} checks...\n`);
+      
+      // Use custom command from config if available, otherwise use default
+      let command = defaultTool.args;
+      if (config.commands && config.commands[toolName]) {
+        command = config.commands[toolName];
+      }
+      
+      // Build full command
+      const binDir = resolveToolBinDir();
+      const binPath = path.join(binDir, defaultTool.bin);
+      const fullCommand = `${binPath}${command ? ' ' + command : ''}`;
+      
+      // Run the specific tool
+      const checker = new CodeQualityChecker(config);
+      const result = checker.runCommand(fullCommand, defaultTool.description);
+      
+      const icon = result.success ? '✅' : '❌';
+      const status = result.success ? 'Passed' : 'Failed';
+      
+      console.log(`${icon} ${toolName}... ${status}`);
+      
+      if (!result.success && args.includes('--logs')) {
+        console.log(`\n❌ ${toolName} Error:`);
+        console.log('─'.repeat(50));
+        console.log(result.output);
+        console.log('─'.repeat(50));
+      }
+      
+      // Exit with error code if tool failed
+      if (!result.success) {
+        process.exit(1);
+      }
+    }
+    
+    console.log('\n🎉 All specified tools passed!\n');
+    process.exit(0);
   }
 
   // Parse environment flag
