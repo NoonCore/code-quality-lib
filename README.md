@@ -225,9 +225,22 @@ console.log(result.results); // per-tool results array
 | `descriptions` | `Record<string, string>` | built-in | Custom descriptions per tool |
 | `loadEnv` | `boolean` | `true` | Load `.env` file |
 
-## Bundled Tools
+## Tool Resolution
 
-All tools are included as dependencies — zero extra setup:
+The library intelligently resolves tools in this order:
+
+1. **Project's `node_modules/.bin`** — Uses your project's installed versions first
+2. **Library's bundled tools** — Falls back to bundled versions if not found in project
+3. **Custom commands** — If you specify custom commands in config, uses them as-is
+
+This means:
+- ✅ Uses your project's tool versions and configurations by default
+- ✅ Works out-of-the-box with bundled tools as fallback
+- ✅ Custom commands use tools from your project's PATH
+
+### Bundled Tools
+
+All tools are included as dependencies for fallback:
 
 | Tool | Description |
 |------|-------------|

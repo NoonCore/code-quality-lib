@@ -68,15 +68,18 @@ function loadEnvFile() {
 // ─── Tool Path Resolution ───────────────────────────────────────────────────
 
 function resolveToolBinDir() {
-  try {
-    return path.join(
-      path.dirname(require.resolve('code-quality-lib/package.json')),
-      'node_modules',
-      '.bin'
-    );
-  } catch {
-    return path.join(__dirname, 'node_modules', '.bin');
+  // Always use project's node_modules/.bin first (where code-quality is installed)
+  const projectBinDir = path.join(process.cwd(), 'node_modules', '.bin');
+  
+  // Fallback to library's bundled binaries if project doesn't have them
+  const libBinDir = path.join(__dirname, 'node_modules', '.bin');
+  
+  // Check if project has node_modules/.bin directory
+  if (fs.existsSync(projectBinDir)) {
+    return projectBinDir;
   }
+  
+  return libBinDir;
 }
 
 // ─── Config File Detection ──────────────────────────────────────────────────
@@ -185,8 +188,12 @@ class CodeQualityChecker {
 
       let cmd = this.options.commands[toolName];
 
-      // If no custom command, build default with config detection
-      if (!cmd) {
+      // If custom command provided, use it directly (assumes tools are in PATH or project's node_modules)
+      if (cmd) {
+        // Custom command - use as-is, tools should be available in project's node_modules/.bin or PATH
+        // No need to prepend full path
+      } else {
+        // No custom command - build default
         const binPath = path.join(binDir, defaultTool.bin);
         let args = defaultTool.args;
 
