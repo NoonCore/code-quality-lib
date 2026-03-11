@@ -531,7 +531,7 @@ class CodeQualityChecker {
       const errorLines = this._parseErrorLines(name, result.output);
       
       // Special handling for Knip - allow passing with warnings only
-      let finalResult = { ...result, ...counts, errorLines };
+      let finalResult = { name, description, ...result, ...counts, errorLines };
       if (name === 'Knip' && !result.success && counts.warnings > 0 && counts.errors === 0) {
         finalResult.success = true; // Override success for Knip warnings only
       }
@@ -659,8 +659,11 @@ class CodeQualityChecker {
     report += `---\n\n`;
 
     for (const r of results) {
-      report += `## ${r.name}\n\n`;
-      report += `**Description**: ${r.description}\n\n`;
+      const toolName = r.name || 'Unknown Tool';
+      const toolDesc = r.description || 'No description available';
+      
+      report += `## ${toolName}\n\n`;
+      report += `**Description**: ${toolDesc}\n\n`;
       report += `**Status**: ${r.success ? '✅ **PASSED**' : '❌ **FAILED**'}\n\n`;
       if (r.output) {
         report += `**Output**:\n\`\`\`\n${r.output}\n\`\`\`\n\n`;
