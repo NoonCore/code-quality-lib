@@ -143,15 +143,24 @@ The CLI provides step-by-step progress like setup wizards:
 ✅ Your code is ready for production!
 ```
 
-### Configuration File
+### Configuration Directory
 
-Generate a configuration file to customize your quality checks:
+Generate a configuration directory with reference configs:
 
 ```bash
 code-quality --config
 ```
 
-This creates `.code-quality.json` with all options:
+This creates `.code-quality/` directory with:
+
+- **config.json** — Main configuration file
+- **tsconfig.json** — TypeScript reference config
+- **eslint.config.mjs** — ESLint reference config
+- **.prettierrc** — Prettier reference config
+- **knip.json** — Knip reference config
+- **README.md** — Usage documentation
+
+Example `config.json`:
 
 ```json
 {
@@ -170,7 +179,7 @@ This creates `.code-quality.json` with all options:
 }
 ```
 
-The CLI automatically loads `.code-quality.json` if it exists, so you can:
+The CLI automatically loads `.code-quality/config.json` if it exists:
 
 ```bash
 code-quality    # uses your custom config
@@ -179,10 +188,28 @@ code-quality    # uses your custom config
 Or use it programmatically:
 
 ```javascript
-const config = require('./.code-quality.json');
+const config = require('./.code-quality/config.json');
 const checker = new CodeQualityChecker(config);
 await checker.run();
 ```
+
+### Config Modes
+
+**Use Project Configs (Default)**
+```json
+{
+  "useProjectConfig": true
+}
+```
+Uses your project's existing config files (`.eslintrc.js`, `.prettierrc`, `tsconfig.json`, etc.)
+
+**Use Reference Configs**
+```json
+{
+  "useProjectConfig": false
+}
+```
+Uses reference configs from `.code-quality/` directory as starting point for new projects
 
 ## Library Usage
 

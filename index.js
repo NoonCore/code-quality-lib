@@ -402,7 +402,13 @@ async function runQualityCheck(options = {}) {
 // ─── Config Generation ────────────────────────────────────────────────────
 
 function generateConfigFile() {
-  const configPath = path.join(process.cwd(), '.code-quality.json');
+  const configDir = path.join(process.cwd(), '.code-quality');
+  const configPath = path.join(configDir, 'config.json');
+  
+  // Create .code-quality directory if it doesn't exist
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
   
   const config = {
     version: '1.0.0',
@@ -424,61 +430,61 @@ function generateConfigFile() {
       Knip: 'Dead code detection',
       Snyk: 'Security vulnerability scanning'
     },
-    generated: new Date().toISOString(),
-    readme: `# Code Quality Configuration
-
-This file controls how code-quality-lib runs checks in this project.
-
-## Options Explained
-
-- **tools**: Array of tools to run. Remove any you don't need.
-- **packageManager**: Auto-detected, but you can force one (npm, bun, pnpm, yarn)
-- **useProjectConfig**: Use project's own .eslintrc, .prettierrc, etc. (true) or bundled configs (false)
-- **loadEnv**: Load .env file before running checks
-- **commands**: Override default commands for each tool
-- **descriptions**: Custom descriptions shown during execution
-
-## Usage
-
-\`\`\`javascript
-const { CodeQualityChecker } = require('code-quality-lib');
-const config = require('./.code-quality.json');
-
-const checker = new CodeQualityChecker(config);
-await checker.run();
-\`\`\`
-
-Or with CLI (will automatically use this config):
-\`\`\`bash
-code-quality
-\`\`\``
+    generated: new Date().toISOString()
   };
 
   try {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-    console.log(`✅ Configuration file created: ${configPath}`);
-    console.log('📝 Edit the file to customize your quality checks');
-    console.log('📖 See the readme section in the file for guidance');
+    
+    // Copy reference configs from library to .code-quality/
+    const libConfigDir = path.join(__dirname, '.code-quality');
+    const referenceConfigs = ['tsconfig.json', 'eslint.config.mjs', '.prettierrc', 'knip.json', 'README.md'];
+    
+    for (const configFile of referenceConfigs) {
+      const srcPath = path.join(libConfigDir, configFile);
+      const destPath = path.join(configDir, configFile);
+      
+      if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+    
+    console.log(`✅ Configuration directory created: ${configDir}`);
+    console.log('📝 Reference config files copied to .code-quality/');
+    console.log('📖 See .code-quality/README.md for usage guidance');
   } catch (error) {
-    console.error(`❌ Failed to create config file: ${error.message}`);
+    console.error(`❌ Failed to create config: ${error.message}`);
     process.exit(1);
   }
 }
 
 function loadConfigFile() {
-  const configPath = path.join(process.cwd(), '.code-quality.json');
+  // Try new location first: .code-quality/config.json
+  const newConfigPath = path.join(process.cwd(), '.code-quality', 'config.json');
   
-  if (!fs.existsSync(configPath)) {
-    return null;
+  if (fs.existsSync(newConfigPath)) {
+    try {
+      const content = fs.readFileSync(newConfigPath, 'utf8');
+      return JSON.parse(content);
+    } catch (error) {
+      console.warn(`⚠️  Failed to load .code-quality/config.json: ${error.message}`);
+    }
   }
   
-  try {
-    const content = fs.readFileSync(configPath, 'utf8');
-    return JSON.parse(content);
-  } catch (error) {
-    console.warn(`⚠️  Failed to load .code-quality.json: ${error.message}`);
-    return null;
+  // Fallback to old location: .code-quality.json (for backward compatibility)
+  const oldConfigPath = path.join(process.cwd(), '.code-quality.json');
+  
+  if (fs.existsSync(oldConfigPath)) {
+    try {
+      const content = fs.readFileSync(oldConfigPath, 'utf8');
+      console.log('ℹ️  Using legacy .code-quality.json (consider migrating to .code-quality/config.json)');
+      return JSON.parse(content);
+    } catch (error) {
+      console.warn(`⚠️  Failed to load .code-quality.json: ${error.message}`);
+    }
   }
+  
+  return null;
 }
 
 // ─── Interactive Wizard ───────────────────────────────────────────────────
@@ -561,7 +567,7 @@ async function runWizard() {
     process.exit(0);
   }
 
-  // Save config for next time
+  // Save config for next time in .code-quality/ directory
   const config = {
     version: '1.0.0',
     packageManager: selectedPm,
@@ -572,9 +578,31 @@ async function runWizard() {
   };
 
   try {
-    const configPath = path.join(process.cwd(), '.code-quality.json');
+    const configDir = path.join(process.cwd(), '.code-quality');
+    const configPath = path.join(configDir, 'config.json');
+    
+    // Create .code-quality directory if it doesn't exist
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true });
+    }
+    
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    
+    // Copy reference configs from library to .code-quality/
+    const libConfigDir = path.join(__dirname, '.code-quality');
+    const referenceConfigs = ['tsconfig.json', 'eslint.config.mjs', '.prettierrc', 'knip.json', 'README.md'];
+    
+    for (const configFile of referenceConfigs) {
+      const srcPath = path.join(libConfigDir, configFile);
+      const destPath = path.join(configDir, configFile);
+      
+      if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+    
     console.log(`\n💾 Configuration saved to: ${configPath}`);
+    console.log('📝 Reference config files copied to .code-quality/');
   } catch (error) {
     console.warn('\n⚠️  Could not save configuration file');
   }
