@@ -277,7 +277,7 @@ class CodeQualityChecker {
     }
 
     try {
-      const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' })
+      const output = execSync(command, { stdio: 'pipe', encoding: 'utf8', env: { ...process.env } })
       return { success: true, output: (output || '').trim() }
     } catch (error) {
       const output = error.stdout || error.stderr || error.message || 'Unknown error'

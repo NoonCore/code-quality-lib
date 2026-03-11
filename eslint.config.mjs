@@ -15,6 +15,7 @@ const eslintConfig = [
       '.code-quality/',
       '*.log',
       '.DS_Store',
+      '**/*.d.ts',
     ],
   },
   js.configs.recommended,

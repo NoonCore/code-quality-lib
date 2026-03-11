@@ -97,6 +97,5 @@ public
 tmp/
 temp/
 *.tmp
-.quality-report.md
 .code-quality.json
 .code-quality/config.json
