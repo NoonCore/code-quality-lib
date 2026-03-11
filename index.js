@@ -349,6 +349,88 @@ async function runQualityCheck(options = {}) {
   return checker.run({ showLogs: options.showLogs || false });
 }
 
+// ─── Config Generation ────────────────────────────────────────────────────
+
+function generateConfigFile() {
+  const configPath = path.join(process.cwd(), '.code-quality.json');
+  
+  const config = {
+    version: '1.0.0',
+    tools: ['TypeScript', 'ESLint', 'Prettier', 'Knip', 'Snyk'],
+    packageManager: detectPackageManager(),
+    useProjectConfig: true,
+    loadEnv: true,
+    commands: {
+      TypeScript: 'tsc --noEmit',
+      ESLint: '. --ext .js,.jsx,.ts,.tsx',
+      Prettier: '--check .',
+      Knip: '',
+      Snyk: 'test --severity-threshold=high'
+    },
+    descriptions: {
+      TypeScript: 'Type checking and compilation',
+      ESLint: 'Code linting and style checking',
+      Prettier: 'Code formatting validation',
+      Knip: 'Dead code detection',
+      Snyk: 'Security vulnerability scanning'
+    },
+    generated: new Date().toISOString(),
+    readme: `# Code Quality Configuration
+
+This file controls how code-quality-lib runs checks in this project.
+
+## Options Explained
+
+- **tools**: Array of tools to run. Remove any you don't need.
+- **packageManager**: Auto-detected, but you can force one (npm, bun, pnpm, yarn)
+- **useProjectConfig**: Use project's own .eslintrc, .prettierrc, etc. (true) or bundled configs (false)
+- **loadEnv**: Load .env file before running checks
+- **commands**: Override default commands for each tool
+- **descriptions**: Custom descriptions shown during execution
+
+## Usage
+
+\`\`\`javascript
+const { CodeQualityChecker } = require('code-quality-lib');
+const config = require('./.code-quality.json');
+
+const checker = new CodeQualityChecker(config);
+await checker.run();
+\`\`\`
+
+Or with CLI (will automatically use this config):
+\`\`\`bash
+code-quality
+\`\`\``
+  };
+
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    console.log(`✅ Configuration file created: ${configPath}`);
+    console.log('📝 Edit the file to customize your quality checks');
+    console.log('📖 See the readme section in the file for guidance');
+  } catch (error) {
+    console.error(`❌ Failed to create config file: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+function loadConfigFile() {
+  const configPath = path.join(process.cwd(), '.code-quality.json');
+  
+  if (!fs.existsSync(configPath)) {
+    return null;
+  }
+  
+  try {
+    const content = fs.readFileSync(configPath, 'utf8');
+    return JSON.parse(content);
+  } catch (error) {
+    console.warn(`⚠️  Failed to load .code-quality.json: ${error.message}`);
+    return null;
+  }
+}
+
 // ─── CLI Entry Point ────────────────────────────────────────────────────────
 
 if (require.main === module) {
@@ -361,6 +443,12 @@ if (require.main === module) {
     console.log('  --help, -h     Show this help message');
     console.log('  --version, -v  Show version number');
     console.log('  --logs         Show detailed error logs');
+    console.log('  --config       Generate .code-quality.json configuration file');
+    console.log('');
+    console.log('Examples:');
+    console.log('  code-quality                    # Run checks with defaults');
+    console.log('  code-quality --config            # Generate config file');
+    console.log('  code-quality --logs              # Run with verbose output');
     console.log('');
     console.log('Runs TypeScript, ESLint, Prettier, Knip, and Snyk checks.');
     process.exit(0);
@@ -372,7 +460,14 @@ if (require.main === module) {
     process.exit(0);
   }
 
-  const checker = new CodeQualityChecker();
+  if (args.includes('--config')) {
+    generateConfigFile();
+    process.exit(0);
+  }
+
+  // Load config file if exists
+  const config = loadConfigFile();
+  const checker = new CodeQualityChecker(config || {});
   checker.run({ showLogs: args.includes('--logs') }).then((result) => {
     process.exit(result.success ? 0 : 1);
   });

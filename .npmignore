@@ -11,6 +11,7 @@ dist/
 
 # Quality reports
 .quality-report.md
+.code-quality.json
 
 # Development configs
 .eslintrc.js

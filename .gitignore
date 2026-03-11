@@ -98,3 +98,4 @@ tmp/
 temp/
 *.tmp
 .quality-report.md
+.code-quality.json

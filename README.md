@@ -40,8 +40,50 @@ yarn dlx code-quality     # yarn
 ```bash
 code-quality              # run all quality checks
 code-quality --logs       # show detailed error output
+code-quality --config     # generate .code-quality.json config file
 code-quality --help       # show help
 code-quality --version    # show version
+```
+
+### Configuration File
+
+Generate a configuration file to customize your quality checks:
+
+```bash
+code-quality --config
+```
+
+This creates `.code-quality.json` with all options:
+
+```json
+{
+  "version": "1.0.0",
+  "tools": ["TypeScript", "ESLint", "Prettier", "Knip", "Snyk"],
+  "packageManager": "npm",
+  "useProjectConfig": true,
+  "loadEnv": true,
+  "commands": {
+    "TypeScript": "tsc --noEmit",
+    "ESLint": ". --ext .js,.jsx,.ts,.tsx",
+    "Prettier": "--check .",
+    "Knip": "",
+    "Snyk": "test --severity-threshold=high"
+  }
+}
+```
+
+The CLI automatically loads `.code-quality.json` if it exists, so you can:
+
+```bash
+code-quality    # uses your custom config
+```
+
+Or use it programmatically:
+
+```javascript
+const config = require('./.code-quality.json');
+const checker = new CodeQualityChecker(config);
+await checker.run();
 ```
 
 ## Library Usage
