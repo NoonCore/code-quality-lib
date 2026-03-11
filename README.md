@@ -3,8 +3,9 @@
 [![npm version](https://badge.fury.io/js/code-quality-lib.svg)](https://badge.fury.io/js/code-quality-lib)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)](https://nodejs.org/)
+[![Downloads](https://img.shields.io/npm/dm/code-quality-lib.svg)](https://www.npmjs.com/package/code-quality-lib)
 
-> A configurable code quality checker library for Node.js projects that supports TypeScript, ESLint, Prettier, Knip, and Snyk with beautiful terminal output.
+> 🚀 **A configurable code quality checker library for Node.js projects** - Now available on npm! Auto-detects your package manager and runs TypeScript, ESLint, Prettier, Knip, and Snyk with beautiful terminal output.
 
 ## Features
 
@@ -68,6 +69,43 @@ yarn global add code-quality-lib
 yarn add -D https://github.com/NoonCore/code-quality-lib.git
 ```
 
+### 📦 Available on NPM
+
+This library is now published on npm! You can install it directly:
+
+```bash
+# Latest stable version
+npm install -D code-quality-lib
+
+# Specific version
+npm install -D code-quality-lib@^1.0.0
+
+# Or with bun (recommended)
+bun add -D code-quality-lib
+```
+
+**Version Management:**
+- Use `^1.0.0` for automatic patch/minor updates
+- Use `~1.0.0` for patch updates only  
+- Use `1.0.0` for exact version
+- Use `*` or `latest` for always latest version
+
+## Quick Start
+
+```bash
+# Install and run in one command
+bun add -D code-quality-lib && npx code-quality
+
+# Or with npm
+npm install -D code-quality-lib && npx code-quality
+
+# Or install globally
+npm install -g code-quality-lib
+code-quality
+```
+
+That's it! The library will auto-detect your package manager and run all quality checks.
+
 ## Usage
 
 ### As a CLI Tool
@@ -76,7 +114,7 @@ yarn add -D https://github.com/NoonCore/code-quality-lib.git
 # Run all quality checks
 code-quality
 
-# Or use with npx
+# Or use with npx (without installing)
 npx code-quality-lib
 ```
 
