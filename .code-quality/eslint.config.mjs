@@ -9,7 +9,6 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 
 export default [
-  js.configs.recommended,
   {
     ignores: [
       'node_modules/',
@@ -45,8 +44,10 @@ export default [
       '*.temp',
       'public/',
       '.code-quality/',
+      '**/.code-quality/**', // More specific pattern
     ],
   },
+  js.configs.recommended,
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
