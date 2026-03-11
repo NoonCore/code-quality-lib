@@ -513,8 +513,8 @@ class CodeQualityChecker {
       
       console.log(`${icon} ${name}${status}`);
       
-      // Show individual error lines for failed tools
-      if (!result.success && result.errorLines && result.errorLines.length > 0) {
+      // Show individual error lines for failed tools only when --logs is used
+      if (!result.success && result.errorLines && result.errorLines.length > 0 && args.includes('--logs')) {
         console.log(`   📝 Error details:`);
         for (const errorLine of result.errorLines) {
           console.log(`   • ${errorLine}`);
@@ -1101,8 +1101,8 @@ if (require.main === module) {
       
       console.log(`${icon} ${name}${status}`);
       
-      // Show individual error lines for failed tools
-      if (!result.success && result.errorLines && result.errorLines.length > 0) {
+      // Show individual error lines for failed tools only when --logs is used
+      if (!result.success && result.errorLines && result.errorLines.length > 0 && args.includes('--logs')) {
         console.log(`   📝 Error details:`);
         for (const errorLine of result.errorLines) {
           console.log(`   • ${errorLine}`);
