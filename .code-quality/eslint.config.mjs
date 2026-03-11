@@ -8,7 +8,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 
-export default [
+const eslintConfig = [
   {
     ignores: [
       'node_modules/',
@@ -187,7 +187,7 @@ export default [
       // SonarJS
       'sonarjs/cognitive-complexity': ['error', 15],
       'sonarjs/no-duplicate-string': 'warn',
-      
+
       // Unicorn
       'unicorn/no-array-for-each': 'error',
       'unicorn/prefer-node-protocol': 'error',
@@ -221,3 +221,5 @@ export default [
   },
   prettier,
 ];
+
+export default eslintConfig;
