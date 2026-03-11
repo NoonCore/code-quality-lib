@@ -694,7 +694,30 @@ function loadConfigFile() {
   if (fs.existsSync(newConfigPath)) {
     try {
       const content = fs.readFileSync(newConfigPath, 'utf8');
-      return JSON.parse(content);
+      let config = JSON.parse(content);
+      
+      // Migrate old format to new environment-based structure
+      if (config.tools && !config.environments) {
+        console.log('🔄 Migrating configuration to environment-based format...');
+        config.environments = {
+          development: {
+            tools: config.tools
+          },
+          ci: {
+            tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk']
+          },
+          production: {
+            tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk']
+          }
+        };
+        config.tools = undefined; // Remove old tools array
+        
+        // Save migrated config
+        fs.writeFileSync(newConfigPath, JSON.stringify(config, null, 2), 'utf8');
+        console.log('✅ Configuration migrated successfully');
+      }
+      
+      return config;
     } catch (error) {
       console.warn(`⚠️  Failed to load .code-quality/config.json: ${error.message}`);
     }
@@ -706,8 +729,36 @@ function loadConfigFile() {
   if (fs.existsSync(oldConfigPath)) {
     try {
       const content = fs.readFileSync(oldConfigPath, 'utf8');
+      let config = JSON.parse(content);
+      
+      // Migrate old format to new environment-based structure
+      if (config.tools && !config.environments) {
+        console.log('🔄 Migrating configuration to environment-based format...');
+        config.environments = {
+          development: {
+            tools: config.tools
+          },
+          ci: {
+            tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk']
+          },
+          production: {
+            tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk']
+          }
+        };
+        config.tools = undefined; // Remove old tools array
+        
+        // Save to new location and remove old file
+        const configDir = path.join(process.cwd(), '.code-quality');
+        if (!fs.existsSync(configDir)) {
+          fs.mkdirSync(configDir, { recursive: true });
+        }
+        fs.writeFileSync(newConfigPath, JSON.stringify(config, null, 2), 'utf8');
+        fs.unlinkSync(oldConfigPath);
+        console.log('✅ Configuration migrated to .code-quality/config.json');
+      }
+      
       console.log('ℹ️  Using legacy .code-quality.json (consider migrating to .code-quality/config.json)');
-      return JSON.parse(content);
+      return config;
     } catch (error) {
       console.warn(`⚠️  Failed to load .code-quality.json: ${error.message}`);
     }
