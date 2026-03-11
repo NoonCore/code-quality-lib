@@ -1,6 +1,0 @@
-{
-  "entry": ["src/index.ts", "src/app/**/*.tsx", "src/pages/**/*.tsx"],
-  "project": ["src/**/*.{ts,tsx,js,jsx}"],
-  "ignore": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "**/__tests__/**", "node_modules/**", ".code-quality/**"],
-  "ignoreDependencies": []
-}

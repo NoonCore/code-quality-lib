@@ -1,32 +1,36 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "useUnknownInCatchVariables": true,
+    "noEmit": true,
+    "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "dist",
-    "rootDir": ".",
     "jsx": "react-jsx",
     "incremental": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitReturns": false,
-    "allowUnreachableCode": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": false
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "plugins": [{ "name": "next" }]
   },
-  "include": ["index.js", "index.d.ts", "test/**/*"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
   "exclude": ["node_modules", "dist", "build", "coverage", "examples"]
 }

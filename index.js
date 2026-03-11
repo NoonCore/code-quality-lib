@@ -328,21 +328,29 @@ class CodeQualityChecker {
         break
       }
       case 'Prettier': {
-        // Prettier lists files that need formatting
-        const lines = output.split('\n')
-        const filesNeedingFormatting = lines.filter((line) => {
-          const trimmed = line.trim()
-          return (
-            trimmed &&
-            !trimmed.includes('Code style issues') &&
-            !trimmed.includes('formatted') &&
-            !trimmed.includes('issues found') &&
-            !trimmed.includes('files listed') &&
-            !trimmed.startsWith('[') &&
-            !trimmed.startsWith('{')
-          )
-        })
-        errors = filesNeedingFormatting.length
+        // Check if Prettier reports success
+        if (output.includes('All matched files use Prettier code style!')) {
+          errors = 0
+        } else {
+          // Count files that need formatting
+          const lines = output.split('\n')
+          const filesNeedingFormatting = lines.filter((line) => {
+            const trimmed = line.trim()
+            return (
+              trimmed &&
+              !trimmed.includes('Code style issues') &&
+              !trimmed.includes('formatted') &&
+              !trimmed.includes('issues found') &&
+              !trimmed.includes('files listed') &&
+              !trimmed.includes('Checking formatting') &&
+              !trimmed.startsWith('[') &&
+              !trimmed.startsWith('{') &&
+              !trimmed.startsWith('{') &&
+              trimmed.includes('.') // Must be a file path
+            )
+          })
+          errors = filesNeedingFormatting.length
+        }
         break
       }
       case 'Knip': {
@@ -755,7 +763,7 @@ async function runQualityCheck(options = {}) {
 
 function initConfigFiles() {
   const rootDir = process.cwd()
-  const libConfigDir = path.join(__dirname, '.code-quality')
+  const libConfigDir = path.join(__dirname, 'config')
 
   console.log('\n🚀 Initializing config files in root directory...\n')
 
@@ -847,7 +855,7 @@ function generateConfigFile() {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
 
     // Copy reference configs from library to .code-quality/
-    const libConfigDir = path.join(__dirname, '.code-quality')
+    const libConfigDir = path.join(__dirname, 'config')
     const referenceConfigs = [
       'tsconfig.json',
       'eslint.config.mjs',
@@ -1136,7 +1144,7 @@ async function runWizard() {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8')
 
     // Copy reference configs from library to .code-quality/
-    const libConfigDir = path.join(__dirname, '.code-quality')
+    const libConfigDir = path.join(__dirname, 'config')
     const referenceConfigs = [
       'tsconfig.json',
       'eslint.config.mjs',
