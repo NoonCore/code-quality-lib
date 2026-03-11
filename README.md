@@ -6,19 +6,15 @@
 [![Downloads](https://img.shields.io/npm/dm/code-quality-lib.svg)](https://www.npmjs.com/package/code-quality-lib)
 [![CI/CD](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml/badge.svg)](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml)
 
-> 🚀 **A configurable code quality checker library for Node.js projects** - Now available on npm! Auto-detects your package manager and runs TypeScript, ESLint, Prettier, Knip, and Snyk with beautiful terminal output.
+> 🚀 A configurable code quality checker for Node.js that auto-detects your package manager and runs TypeScript, ESLint, Prettier, Knip, and Snyk.
 
 ## Features
 
-- **Multi-Package Manager Support**: Auto-detects and works with bun, pnpm, yarn, and npm
-- **Configurable**: Customize which tools to run and their commands
-- **Beautiful Output**: Colorized terminal output with clear status indicators  
-- **Environment Support**: Automatically loads `.env` files
-- **Snyk Integration**: Handles Snyk authentication gracefully
-- **TypeScript Support**: Full TypeScript definitions included
-- **CLI & Library**: Can be used as both command-line tool and library
-- **Extensible**: Easy to add custom tools and checks
-- **Detailed Reporting**: Clear error counts and status messages
+- 🚀 Works with npm, bun, pnpm, yarn (auto-detected)
+- 🎨 Beautiful terminal output
+- ⚙️ Configurable tools and commands
+- 📚 TypeScript definitions included
+- 🔧 CLI and library usage
 
 ## Installation
 
@@ -70,45 +66,19 @@ yarn global add code-quality-lib
 yarn add -D https://github.com/NoonCore/code-quality-lib.git
 ```
 
-### 📦 Available on NPM
-
-This library is now published on npm! You can install it directly:
-
-```bash
-# Latest stable version
-npm install -D code-quality-lib
-
-# Specific version
-npm install -D code-quality-lib@^1.0.0
-
-# Or with bun (recommended)
-bun add -D code-quality-lib
-```
-
-**Version Management:**
-- Use `^1.0.0` for automatic patch/minor updates
-- Use `~1.0.0` for patch updates only  
-- Use `1.0.0` for exact version
-- Use `*` or `latest` for always latest version
 
 ## Quick Start
 
 ```bash
-# Install and run in one command
-bun add -D code-quality-lib && bunx code-quality
-
-# Or with npm
+# Install and run
 npm install -D code-quality-lib && npx code-quality
+
+# Or with bun
+bun add -D code-quality-lib && bunx code-quality
 
 # Or with yarn
 yarn add -D code-quality-lib && yarn code-quality
-
-# Or install globally
-npm install -g code-quality-lib
-code-quality
 ```
-
-That's it! The library will auto-detect your package manager and run all quality checks.
 
 ## Usage
 
@@ -193,87 +163,7 @@ const checker = new CodeQualityChecker({
 });
 ```
 
-### Environment-Specific Configuration
 
-```javascript
-const isCI = process.env.CI === 'true';
-const ciChecker = new CodeQualityChecker({
-  tools: isCI 
-    ? ['TypeScript', 'ESLint'] 
-    : ['TypeScript', 'ESLint', 'Prettier', 'Knip', 'Snyk'],
-  loadEnv: !isCI
-});
-```
-
-## Integration with Existing Projects
-
-### Replace Existing Scripts
-
-**Before:**
-```json
-{
-  "scripts": {
-    "quality": "node scripts/quality-check.js"
-  }
-}
-```
-
-**After:**
-```json
-{
-  "scripts": {
-    "quality": "code-quality"
-  }
-}
-```
-
-### Programmatic Usage
-
-```javascript
-// In your build script
-const { CodeQualityChecker } = require('code-quality-lib');
-
-async function buildWithQualityCheck() {
-  const checker = new CodeQualityChecker({
-    tools: ['TypeScript', 'ESLint']
-  });
-  
-  const result = await checker.run();
-  if (!result.success) {
-    console.error('❌ Quality checks failed!');
-    process.exit(1);
-  }
-  
-  // Continue with build...
-  console.log('✅ Quality checks passed, building...');
-}
-
-buildWithQualityCheck();
-```
-
-## Output Example
-
-```
-🔍 Professional Code Quality Check
-
-──────────────────────────────────────────────────
-📦 Using bun package manager
-Checking Snyk authentication...
-Running TypeScript compilation...
-Running ESLint validation...
-Running Prettier formatting...
-Running Dead code detection...
-Running Security vulnerability scan...
-
-✅ TypeScript: 0 errors
-✅ ESLint: 0 errors, 0 warnings  
-✅ Prettier: All files formatted
-✅ Knip: No critical errors
-✅ Snyk: No vulnerabilities
-──────────────────────────────────────────────────
-
-🎉 All quality checks passed! Code is ready for production.
-```
 
 ## API Reference
 
@@ -370,66 +260,13 @@ yarn add -D typescript eslint prettier
 
 **Note**: The library automatically skips tools that aren't installed, so you can start with just the tools you need and add more later.
 
-## Framework Compatibility
+## Framework Support
 
-This library is framework-agnostic and works with:
-
-- **Next.js** (all versions)
-- **React** (Create React App, Vite, etc.)
-- **Vue.js** (Vue CLI, Nuxt, Vite)
-- **Angular** (Angular CLI)
-- **Node.js** (Express, Koa, etc.)
-- **TypeScript** projects
-- **Plain JavaScript** projects
-
-## Examples
-
-### Next.js Project
-```javascript
-const { CodeQualityChecker } = require('code-quality-lib');
-
-const nextJSChecker = new CodeQualityChecker({
-  commands: {
-    TypeScript: 'tsc --noEmit',
-    ESLint: 'next lint',
-    Prettier: 'prettier --check .',
-    Knip: 'knip',
-    Snyk: 'snyk test'
-  }
-});
-```
-
-### Vue.js Project
-```javascript
-const vueChecker = new CodeQualityChecker({
-  commands: {
-    TypeScript: 'vue-tsc --noEmit',
-    ESLint: 'eslint .ext .vue,.js,.ts',
-    Prettier: 'prettier --check .'
-  }
-});
-```
-
-### Express.js Project
-```javascript
-const expressChecker = new CodeQualityChecker({
-  tools: ['TypeScript', 'ESLint'],
-  commands: {
-    TypeScript: 'tsc --noEmit',
-    ESLint: 'eslint src/'
-  }
-});
-```
+Works with any Node.js framework: Next.js, React, Vue, Angular, Express, etc.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Contributions welcome! Fork, create a feature branch, and submit a PR.
 
 ## License
 
@@ -445,8 +282,3 @@ This library is automatically tested across multiple runtimes:
 
 All tests run in parallel on every push and pull request. The library only publishes to npm when all tests pass.
 
-## Acknowledgments
-
-- Built for modern JavaScript/TypeScript development workflows
-- Inspired by the need for unified quality checking across projects
-- Designed with developer experience and productivity in mind
