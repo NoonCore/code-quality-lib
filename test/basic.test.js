@@ -80,11 +80,14 @@ function testClassInstantiation() {
 // Test 6: Bundled dependencies exist
 function testDependencies() {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
-  if (!pkg.dependencies) throw new Error('No dependencies in package.json')
+  
+  // Check both dependencies and devDependencies for bundled tools
+  const allDeps = { ...pkg.dependencies, ...pkg.devDependencies }
+  if (!allDeps) throw new Error('No dependencies in package.json')
 
   const required = ['typescript', 'eslint', 'prettier', 'knip', 'snyk']
   for (const dep of required) {
-    if (!pkg.dependencies[dep]) throw new Error(`Missing dependency: ${dep}`)
+    if (!allDeps[dep]) throw new Error(`Missing dependency: ${dep}`)
   }
 }
 
