@@ -1,7 +1,5 @@
 {
   "packageManager": "bun",
-  "useProjectConfig": false,
-  "loadEnv": true,
   "environments": {
     "development": {
       "tools": [

@@ -75,10 +75,6 @@ Let's configure your quality checks!
 📦 Detected package manager: npm
 Use npm? (Y/n):
 
-⚙️  Use project config files (.eslintrc, .prettierrc, etc.)?
-Answer "No" to use bundled configs from code-quality-lib
-Use project configs? (y/N):
-
 🔧 Select tools to run (default = all checked):
 [✓] TypeScript? (Y/n):
 [✓] ESLint? (Y/n):
@@ -86,15 +82,16 @@ Use project configs? (y/N):
 [✓] Knip? (Y/n):
 [✓] Snyk? (Y/n):
 
-🌍 Load .env file before running checks?
-Load .env? (Y/n):
+🌍 Set up environment-specific tool sets?
+This allows different tools for development vs CI/CD
+Configure environments? (y/N):
 
 📋 Configuration Summary:
 ──────────────────────────────────────────────────
 📦 Package Manager: npm
-⚙️  Config: Bundled configs
+⚙️  Config: Project configs (detected)
 🔧 Tools: TypeScript, ESLint, Prettier, Knip, Snyk
-🌍 Load .env: Yes
+🌍 Load .env: Yes (always)
 ──────────────────────────────────────────────────
 Run checks with these settings? (Y/n):
 ```
@@ -104,7 +101,8 @@ Run checks with these settings? (Y/n):
 - **Remember settings** — First run creates `.code-quality.json`, future runs skip questions
 - **Yes/No questions** — Simple Y/n prompts with sensible defaults
 - **Checkbox-style tools** — Each tool can be individually enabled/disabled
-- **Bundled configs default** — Uses library's built-in configs by default
+- **Always uses project configs** — Automatically detects and uses your existing ESLint/Prettier configs
+- **Always loads .env** — Environment variables are always available for your tools
 
 After confirmation, it runs the quality checks with your selected settings.
 
@@ -196,9 +194,7 @@ Or configure environments in `.code-quality/config.json`:
       "tools": ["ESLint", "TypeScript", "Prettier", "Knip", "Snyk"]
     }
   },
-  "packageManager": "npm",
-  "useProjectConfig": true,
-  "loadEnv": true
+  "packageManager": "npm"
 }
 ```
 
@@ -233,52 +229,32 @@ const checker = new CodeQualityChecker(config)
 await checker.run()
 ```
 
-### Config Modes
+### Configuration
 
-**Use Project Configs (Default)**
+The library automatically detects and uses your project's existing configuration files (`.eslintrc`, `.prettierrc`, `tsconfig.json`, etc.) if they exist. If no project configs are found, it uses bundled configurations.
 
-```json
-{
-  "useProjectConfig": true
-}
-```
-
-Uses your project's existing config files (`.eslintrc.js`, `.prettierrc`, `tsconfig.json`, etc.)
-
-**Use Reference Configs**
-
-```json
-{
-  "useProjectConfig": false
-}
-```
-
-Uses reference configs from `.code-quality/` directory as starting point for new projects
+**Environment variables** from `.env` files are always loaded automatically.
 
 ## Library Usage
 
 ```javascript
 const { CodeQualityChecker, runQualityCheck } = require('code-quality-lib')
 
-// Quick — run all checks with defaults (uses project's config files)
+// Quick — run all checks with defaults (auto-detects project configs)
 const result = await runQualityCheck()
 console.log(result.success ? 'All passed' : 'Some failed')
 
-// Use bundled configs instead of project's configs
-const checker = new CodeQualityChecker({
-  useProjectConfig: false, // use library's bundled .eslintrc, .prettierrc, etc.
-})
-await checker.run()
-
-// Custom — select tools, override commands
+// Advanced — custom configuration
 const customChecker = new CodeQualityChecker({
-  tools: ['TypeScript', 'ESLint'],
-  packageManager: 'pnpm',
+  environments: {
+    development: { tools: ['ESLint', 'TypeScript'] },
+    ci: { tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk'] },
+  },
+  packageManager: 'npm',
   commands: {
     TypeScript: 'tsc --noEmit',
     ESLint: 'eslint src/ --ext .ts,.tsx',
   },
-  loadEnv: false,
 })
 
 const result = await customChecker.run({ showLogs: true })
@@ -289,12 +265,10 @@ console.log(result.results) // per-tool results array
 
 | Option             | Type                                 | Default       | Description                                                                                 |
 | ------------------ | ------------------------------------ | ------------- | ------------------------------------------------------------------------------------------- |
-| `useProjectConfig` | `boolean`                            | `true`        | Use project's config files (`.eslintrc.js`, `.prettierrc`, etc.) instead of bundled configs |
-| `tools`            | `string[]`                           | All 5 tools   | Which tools to run                                                                          |
+| `tools`            | `string[]`                           | All 5 tools   | Which tools to run (deprecated - use environments instead)                                    |
 | `packageManager`   | `'npm' \| 'bun' \| 'pnpm' \| 'yarn'` | auto-detected | Force a specific package manager                                                            |
 | `commands`         | `Record<string, string>`             | bundled paths | Custom commands per tool                                                                    |
 | `descriptions`     | `Record<string, string>`             | built-in      | Custom descriptions per tool                                                                |
-| `loadEnv`          | `boolean`                            | `true`        | Load `.env` file                                                                            |
 | `environment`      | `string`                             | auto-detected | Override environment (development, ci, production)                                          |
 | `environments`     | `Record<string, EnvironmentConfig>`  | -             | Environment-specific tool configurations                                                    |
 

@@ -183,8 +183,6 @@ class CodeQualityChecker {
       options.environment || process.env.NODE_ENV || process.env.CODE_QUALITY_ENV || 'development'
 
     this.options = {
-      loadEnv: options.loadEnv !== false,
-      useProjectConfig: options.useProjectConfig !== false,
       tools: this._resolveToolsForEnvironment(options.tools, options.environments, env),
       commands: options.commands || {},
       descriptions: options.descriptions || {},
@@ -193,10 +191,11 @@ class CodeQualityChecker {
       environments: options.environments || {},
     }
 
-    if (this.options.loadEnv) loadEnvFile()
+    // Always load .env file
+    loadEnvFile()
 
-    // Detect project configs if useProjectConfig is enabled
-    this.projectConfigs = this.options.useProjectConfig ? detectProjectConfigs() : {}
+    // Always detect and use project configs if they exist
+    this.projectConfigs = detectProjectConfigs()
   }
 
   _resolveToolsForEnvironment(tools, environments, env) {
@@ -239,17 +238,15 @@ class CodeQualityChecker {
         const binPath = path.join(binDir, defaultTool.bin)
         let args = defaultTool.args
 
-        // Add config flags if project configs exist and useProjectConfig is true
-        if (this.options.useProjectConfig) {
-          if (toolName === 'ESLint' && this.projectConfigs.eslint) {
-            args = `${args} --config ${this.projectConfigs.eslint}`
-          } else if (toolName === 'Prettier' && this.projectConfigs.prettier) {
-            args = `${args} --config ${this.projectConfigs.prettier}`
-          } else if (toolName === 'TypeScript' && this.projectConfigs.typescript) {
-            args = `--project ${this.projectConfigs.typescript} --noEmit`
-          } else if (toolName === 'Knip' && this.projectConfigs.knip) {
-            args = `--config ${this.projectConfigs.knip}`
-          }
+        // Add config flags if project configs exist
+        if (toolName === 'ESLint' && this.projectConfigs.eslint) {
+          args = `${args} --config ${this.projectConfigs.eslint}`
+        } else if (toolName === 'Prettier' && this.projectConfigs.prettier) {
+          args = `${args} --config ${this.projectConfigs.prettier}`
+        } else if (toolName === 'TypeScript' && this.projectConfigs.typescript) {
+          args = `--project ${this.projectConfigs.typescript} --noEmit`
+        } else if (toolName === 'Knip' && this.projectConfigs.knip) {
+          args = `--config ${this.projectConfigs.knip}`
         }
 
         cmd = `${binPath}${args ? ' ' + args : ''}`
@@ -552,28 +549,7 @@ class CodeQualityChecker {
     const showLogs = options.showLogs || false
     const useFix = options.useFix || false
 
-    // Load .env file if enabled
-    if (this.options.loadEnv) {
-      try {
-        const dotenvPath = path.join(process.cwd(), '.env')
-        if (fs.existsSync(dotenvPath)) {
-          // Try to load dotenv as optional dependency
-          let dotenv
-          try {
-            dotenv = require('dotenv')
-          } catch (_dotenvError) {
-            // dotenv not installed, skip .env loading
-            console.log('⚠️  dotenv not installed. Install with: npm install dotenv')
-          }
-
-          if (dotenv) {
-            dotenv.config({ path: dotenvPath })
-          }
-        }
-      } catch (_error) {
-        // .env file missing or other error, continue without it
-      }
-    }
+    // .env file is already loaded in constructor
 
     const checks = this._getChecks()
     const pm = this.options.packageManager
@@ -587,9 +563,7 @@ class CodeQualityChecker {
     console.log('─'.repeat(50))
     console.log(`📦 Package Manager: ${pm}`)
     console.log(`🌍 Environment: ${this.options.environment}`)
-    console.log(
-      `⚙️  Config: ${this.options.useProjectConfig ? 'Project configs' : 'Bundled configs'}`
-    )
+    console.log(`⚙️  Config: Project configs (detected)`)
     console.log(`🔧 Tools: ${checks.length} quality checks\n`)
 
     if (showLogs) {
@@ -942,8 +916,7 @@ function generateConfigFile() {
         tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk'],
       },
     },
-    useProjectConfig: true,
-    loadEnv: true,
+    packageManager: detectPackageManager(),
     commands: {
       ESLint: '. --ext .js,.jsx,.ts,.tsx',
       TypeScript: 'tsc --noEmit',
@@ -1097,13 +1070,8 @@ async function runWizard() {
   if (existingConfig) {
     console.log('\n📋 Found existing configuration:')
     console.log(`📦 Package Manager: ${existingConfig.packageManager || 'auto-detected'}`)
-    console.log(
-      `⚙️  Config: ${existingConfig.useProjectConfig !== false ? 'Project configs' : 'Bundled configs'}`
-    )
-    console.log(
-      `🔧 Tools: ${(existingConfig.tools || ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk']).join(', ')}`
-    )
-    console.log(`🌍 Load .env: ${existingConfig.loadEnv !== false ? 'Yes' : 'No'}`)
+    console.log(`⚙️  Config: Project configs (detected)`)
+    console.log(`🔧 Tools: ${(existingConfig.tools || ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk']).join(', ')}`)
 
     const rerun = await askQuestion(rl, '\nReconfigure? (y/N): ')
     if (!rerun.toLowerCase().startsWith('y')) {
@@ -1127,13 +1095,7 @@ async function runWizard() {
     ? await askQuestion(rl, 'Enter package manager (npm/bun/pnpm/yarn): ')
     : pm
 
-  // Step 2: Config Type
-  console.log('\n⚙️  Use project config files (.eslintrc, .prettierrc, etc.)?')
-  console.log('Answer "No" to use bundled configs from code-quality-lib')
-  const configAnswer = await askQuestion(rl, 'Use project configs? (y/N): ')
-  const useProjectConfig = configAnswer.toLowerCase().startsWith('y')
-
-  // Step 3: Tools Selection (Checkbox style)
+  // Step 2: Tools Selection (Checkbox style)
   console.log('\n🔧 Select tools to run (default = all checked):')
   const allTools = ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk']
   const selectedTools = []
@@ -1197,16 +1159,11 @@ async function runWizard() {
     }
   }
 
-  // Step 5: Load .env
-  console.log('\n🌍 Load .env file before running checks?')
-  const envAnswer = await askQuestion(rl, 'Load .env? (Y/n): ')
-  const loadEnv = !envAnswer.toLowerCase().startsWith('n')
-
-  // Step 6: Show summary and confirm
+  // Step 5: Show summary and confirm
   console.log('\n📋 Configuration Summary:')
   console.log('─'.repeat(50))
   console.log(`📦 Package Manager: ${selectedPm}`)
-  console.log(`⚙️  Config: ${useProjectConfig ? 'Project configs' : 'Bundled configs'}`)
+  console.log(`⚙️  Config: Project configs (detected)`)
 
   if (configureEnvironments) {
     console.log(`🌍 Environment Config: Enabled`)
@@ -1216,7 +1173,7 @@ async function runWizard() {
     console.log(`🔧 Tools: ${selectedTools.join(', ')}`)
   }
 
-  console.log(`🌍 Load .env: ${loadEnv ? 'Yes' : 'No'}`)
+  console.log(`🌍 Load .env: Yes (always)`)
   console.log('─'.repeat(50))
 
   const confirm = await askQuestion(rl, 'Run checks with these settings? (Y/n): ')
@@ -1231,9 +1188,7 @@ async function runWizard() {
   // Save config for next time in .code-quality/ directory
   const config = {
     packageManager: selectedPm,
-    useProjectConfig,
     environments: environments, // Always include environments
-    loadEnv,
   }
 
   try {
