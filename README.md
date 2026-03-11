@@ -2,8 +2,9 @@
 
 [![npm version](https://badge.fury.io/js/code-quality-lib.svg)](https://badge.fury.io/js/code-quality-lib)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen)](https://nodejs.org/)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![Downloads](https://img.shields.io/npm/dm/code-quality-lib.svg)](https://www.npmjs.com/package/code-quality-lib)
+[![CI/CD](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml/badge.svg)](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml)
 
 > 🚀 **A configurable code quality checker library for Node.js projects** - Now available on npm! Auto-detects your package manager and runs TypeScript, ESLint, Prettier, Knip, and Snyk with beautiful terminal output.
 
@@ -311,7 +312,7 @@ interface QualityCheckResult {
 
 ## Requirements
 
-- **Node.js** >= 14.0.0
+- **Node.js** >= 18.0.0 (tested on 25.x, 22.x, 20.x)
 - **Package Manager**: bun, pnpm, yarn, or npm (auto-detected)
 - **Quality Tools** (install only what you need):
   - **TypeScript** - `npm install -D typescript` or `bun add -D typescript` or `pnpm add -D typescript` or `yarn add -D typescript`
@@ -424,6 +425,16 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Testing & CI/CD
+
+This library is automatically tested across multiple runtimes:
+- **Node.js** 25.x (npm)
+- **Bun** 1.3.x
+- **pnpm** 10.x
+- **Yarn** 4.13.0
+
+All tests run in parallel on every push and pull request. The library only publishes to npm when all tests pass.
 
 ## Acknowledgments
 
