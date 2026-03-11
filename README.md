@@ -1,324 +1,134 @@
 # Code Quality Library
 
 [![npm version](https://img.shields.io/npm/v/code-quality-lib)](https://www.npmjs.com/package/code-quality-lib)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-18.x%20%7C%2020.x%20%7C%2022.x%20%7C%2025.x-brightgreen)](https://nodejs.org/)
-[![Bun Version](https://img.shields.io/badge/bun-1.3.x-black)](https://bun.sh/)
-[![pnpm Version](https://img.shields.io/badge/pnpm-10.x-f69220)](https://pnpm.io/)
-[![Yarn Version](https://img.shields.io/badge/yarn-4.13.0-2c8ebb)](https://yarnpkg.com/)
 [![CI/CD](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml/badge.svg)](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-included-blue)](https://www.typescriptlang.org/)
 
-> 🚀 A configurable code quality checker for Node.js that auto-detects your package manager and runs TypeScript, ESLint, Prettier, Knip, and Snyk.
+> A configurable code quality checker for Node.js — auto-detects your package manager and runs **TypeScript**, **ESLint**, **Prettier**, **Knip**, and **Snyk** with all dependencies bundled.
 
 ## Features
 
-- 🚀 Works with npm, bun, pnpm, yarn (auto-detected)
-- 🎨 Beautiful terminal output
-- ⚙️ Configurable tools and commands
-- 📚 TypeScript definitions included
-- 🔧 CLI and library usage
-- 📄 Detailed error reports for developers and AI agents
-- 🔍 --logs flag for verbose terminal output
-- 🤖 AI-friendly structured error information
-- 📦 **All dependencies bundled** - No need to install TypeScript, ESLint, Prettier, Knip, or Snyk separately!
+- **All tools bundled** — no need to install TypeScript, ESLint, Prettier, Knip, or Snyk separately
+- **Auto-detects package manager** — npm, bun, pnpm, yarn
+- **CLI + Library** — use from terminal or programmatically
+- **Detailed reports** — generates `.quality-report.md` with AI-friendly error info
+- **`--logs` flag** — verbose terminal output for debugging
+- **TypeScript definitions** — full type safety included
 
 ## Installation
 
-### npm
 ```bash
-# Install as development dependency (recommended)
-npm install -D code-quality-lib
-
-# Install globally for CLI usage
-npm install -g code-quality-lib
-
-# Install from GitHub (development)
-npm install -D https://github.com/NoonCore/code-quality-lib.git
+npm install -D code-quality-lib     # npm
+bun add -D code-quality-lib         # bun
+pnpm add -D code-quality-lib        # pnpm
+yarn add -D code-quality-lib        # yarn
 ```
-
-### bun (recommended - faster)
-```bash
-# Install as development dependency (recommended)
-bun add -D code-quality-lib
-
-# Install globally for CLI usage
-bun add -g code-quality-lib
-
-# Install from GitHub (development)
-bun add -D https://github.com/NoonCore/code-quality-lib.git
-```
-
-### pnpm
-```bash
-# Install as development dependency (recommended)
-pnpm add -D code-quality-lib
-
-# Install globally for CLI usage
-pnpm add -g code-quality-lib
-
-# Install from GitHub (development)
-pnpm add -D https://github.com/NoonCore/code-quality-lib.git
-```
-
-### yarn
-```bash
-# Install as development dependency (recommended)
-yarn add -D code-quality-lib
-
-# Install globally for CLI usage
-yarn global add code-quality-lib
-
-# Install from GitHub (development)
-yarn add -D https://github.com/NoonCore/code-quality-lib.git
-```
-
 
 ## Quick Start
 
 ```bash
-# Install and run
-npm install -D code-quality-lib && npx code-quality
-
-# Or with bun
-bun add -D code-quality-lib && bunx code-quality
-
-# Or with yarn
-yarn add -D code-quality-lib && yarn code-quality
+npx code-quality          # npm
+bunx code-quality         # bun
+pnpm dlx code-quality     # pnpm
+yarn dlx code-quality     # yarn
 ```
 
-## Usage
-
-### As a CLI Tool
+## CLI Usage
 
 ```bash
-# Run all quality checks
-code-quality
-
-# Run with detailed error logs in terminal
-code-quality --logs
-
-# Or use with npx (without installing)
-npx code-quality-lib
-
-# Or with bunx (without installing)
-bunx code-quality-lib
-
-# Or with yarn
-yarn code-quality
+code-quality              # run all quality checks
+code-quality --logs       # show detailed error output
+code-quality --help       # show help
+code-quality --version    # show version
 ```
 
-### Error Reporting
-
-The library automatically generates a detailed error report at `.quality-report.md` with:
-- ✅ Status of each quality check
-- 📋 Full error output for failed checks
-- 💡 Suggestions for fixing common issues
-- 🤖 AI-friendly structured information
-
-**Viewing Errors:**
-```bash
-# Silent mode (default) - errors saved to .quality-report.md
-code-quality
-
-# Verbose mode - errors shown in terminal + saved to report
-code-quality --logs
-
-# View the report
-cat .quality-report.md
-```
-
-**Note:** Add `.quality-report.md` to your `.gitignore` to keep reports local only.
-
-### As a Library
+## Library Usage
 
 ```javascript
-const { CodeQualityChecker } = require('code-quality-lib');
+const { CodeQualityChecker, runQualityCheck } = require('code-quality-lib');
 
-// Use default configuration
-const checker = new CodeQualityChecker();
-checker.run().then(result => {
-  console.log(result.success ? '✅ All checks passed!' : '❌ Some checks failed');
-});
-```
+// Quick — run all checks with defaults
+const result = await runQualityCheck();
+console.log(result.success ? 'All passed' : 'Some failed');
 
-## Configuration
-
-### Default Tools
-
-The library runs these tools by default (all bundled, no separate installation needed):
-- **TypeScript** (v5.8.3) - Type checking and compilation
-- **ESLint** (v9.18.0) - Code linting and style checking with plugins:
-  - @typescript-eslint/eslint-plugin & parser
-  - eslint-plugin-react & react-hooks
-  - eslint-plugin-prettier
-  - eslint-plugin-sonarjs
-  - eslint-plugin-unicorn
-  - eslint-plugin-import
-- **Prettier** (v3.4.2) - Code formatting validation
-- **Knip** (v5.43.2) - Dead code detection and unused exports
-- **Snyk** (v1.1293.1) - Security vulnerability scanning
-
-**No need to install these tools separately!** Everything is bundled with the library.
-
-### Custom Configuration
-
-```javascript
-const customChecker = new CodeQualityChecker({
-  // Force specific package manager
-  packageManager: 'pnpm', // 'bun' | 'pnpm' | 'yarn' | 'npm'
-  
-  // Only run specific tools
+// Custom — select tools, override commands
+const checker = new CodeQualityChecker({
   tools: ['TypeScript', 'ESLint'],
-  
-  // Custom commands for each tool
+  packageManager: 'pnpm',
   commands: {
     TypeScript: 'tsc --noEmit',
     ESLint: 'eslint src/ --ext .ts,.tsx',
-    Prettier: 'prettier --check "src/**/*.{ts,tsx}"'
   },
-  
-  // Custom descriptions
-  descriptions: {
-    TypeScript: 'TypeScript type checking',
-    ESLint: 'ESLint code analysis'
-  },
-  
-  // Disable .env loading
-  loadEnv: false
+  loadEnv: false,
 });
+
+const result = await checker.run({ showLogs: true });
+console.log(result.results); // per-tool results array
 ```
 
-### Package Manager Detection
+## Configuration Options
 
-The library automatically detects your package manager in this order:
-1. **Lock files**: `bun.lock`, `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`
-2. **Available commands**: Checks if `bun`, `pnpm`, `yarn` are installed
-3. **Fallback**: Uses `npm` if nothing else is found
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `tools` | `string[]` | All 5 tools | Which tools to run |
+| `packageManager` | `'npm' \| 'bun' \| 'pnpm' \| 'yarn'` | auto-detected | Force a specific package manager |
+| `commands` | `Record<string, string>` | bundled paths | Custom commands per tool |
+| `descriptions` | `Record<string, string>` | built-in | Custom descriptions per tool |
+| `loadEnv` | `boolean` | `true` | Load `.env` file |
 
-You can also override the detection:
-```javascript
-const checker = new CodeQualityChecker({
-  packageManager: 'yarn' // Force yarn usage
-});
-```
+## Bundled Tools
 
+All tools are included as dependencies — zero extra setup:
 
+| Tool | Description |
+|------|-------------|
+| **TypeScript** | Type checking (`tsc --noEmit`) |
+| **ESLint** | Linting with plugins (react, sonarjs, unicorn, import, prettier) |
+| **Prettier** | Code formatting validation |
+| **Knip** | Dead code and unused export detection |
+| **Snyk** | Security vulnerability scanning |
 
-## API Reference
+## Package Manager Detection
 
-### CodeQualityChecker
+Automatically detected by lock file presence:
 
-#### Constructor
-```javascript
-new CodeQualityChecker(options)
-```
+1. `bun.lock` / `bun.lockb` → bun
+2. `pnpm-lock.yaml` → pnpm
+3. `yarn.lock` → yarn
+4. `package-lock.json` → npm
+5. Fallback: checks installed binaries, defaults to npm
 
-#### Options
-- `loadEnv` (boolean): Load environment variables from `.env` file
-- `tools` (string[]): Array of tool names to run
-- `commands` (Record<string, string>): Custom commands for each tool
-- `descriptions` (Record<string, string>): Descriptions shown during execution
-- `packageManager` ('bun' | 'pnpm' | 'yarn' | 'npm'): Force specific package manager (auto-detected if not specified)
+## Error Reporting
 
-#### Methods
-- `run()`: Promise<QualityCheckResult> - Run all configured checks
-- `runCommand(command, description)`: CommandResult - Execute a single command
-- `formatOutput(tool, result)`: string - Format output for a tool
-- `checkSnykToken()`: boolean - Check Snyk authentication status
+Every run generates `.quality-report.md` with:
+- Status of each check (pass/fail)
+- Full error output for failed checks
+- AI-friendly structured information for automated fixes
 
-### Types
+Add `.quality-report.md` to your `.gitignore`.
 
-```typescript
-interface CodeQualityOptions {
-  loadEnv?: boolean;
-  tools?: string[];
-  commands?: Record<string, string>;
-  descriptions?: Record<string, string>;
-  packageManager?: 'bun' | 'pnpm' | 'yarn' | 'npm';
-}
+## AI Skills
 
-interface CommandResult {
-  success: boolean;
-  output: string;
-}
-
-interface QualityCheckResult {
-  success: boolean;
-  message: string;
-}
-```
+This library includes `.ai/skills/` — markdown files that teach AI coding assistants (Cursor, Copilot, Windsurf, etc.) to follow the project's coding standards. See [`.ai/skills/README.md`](.ai/skills/README.md).
 
 ## Requirements
 
-- **Node.js** >= 18.0.0 (tested on 25.x, 22.x, 20.x)
-- **Package Manager**: bun, pnpm, yarn, or npm (auto-detected)
-- **Quality Tools** (install only what you need):
-  - **TypeScript** - `npm install -D typescript` or `bun add -D typescript` or `pnpm add -D typescript` or `yarn add -D typescript`
-  - **ESLint** - `npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin` or `bun add -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin`
-  - **Prettier** - `npm install -D prettier eslint-config-prettier` or `bun add -D prettier eslint-config-prettier`
-  - **Knip** - `npm install -D knip` or `bun add -D knip`
-  - **Snyk** - `npm install -D snyk` or `bun add -D snyk`
-
-### Quick Setup
-
-#### npm
-```bash
-# Install all quality tools
-npm install -D typescript eslint prettier knip snyk
-
-# Minimal setup
-npm install -D typescript eslint prettier
-```
-
-#### bun (recommended - faster)
-```bash
-# Install all quality tools
-bun add -D typescript eslint prettier knip snyk
-
-# Minimal setup
-bun add -D typescript eslint prettier
-```
-
-#### pnpm
-```bash
-# Install all quality tools
-pnpm add -D typescript eslint prettier knip snyk
-
-# Minimal setup
-pnpm add -D typescript eslint prettier
-```
-
-#### yarn
-```bash
-# Install all quality tools
-yarn add -D typescript eslint prettier knip snyk
-
-# Minimal setup
-yarn add -D typescript eslint prettier
-```
-
-**Note**: The library automatically skips tools that aren't installed, so you can start with just the tools you need and add more later.
-
-## Framework Support
-
-Works with any Node.js framework: Next.js, React, Vue, Angular, Express, etc.
-
-## Contributing
-
-Contributions welcome! Fork, create a feature branch, and submit a PR.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **Node.js** >= 18.0.0
 
 ## Testing & CI/CD
 
-This library is automatically tested across multiple runtimes:
-- **Node.js** 25.x (npm)
-- **Bun** 1.3.x
-- **pnpm** 10.x
-- **Yarn** 4.13.0
+Tested on every push across 4 runtimes:
+- **Node.js 25.x** (npm)
+- **Bun 1.3.x**
+- **pnpm 10.x**
+- **Yarn 4.13.0**
 
-All tests run in parallel on every push and pull request. The library only publishes to npm when all tests pass.
+## Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and guidelines.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

@@ -1,5 +1,6 @@
 # Development files
 .github/
+.ai/
 test/
 examples/
 config/

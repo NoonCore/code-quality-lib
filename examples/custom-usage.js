@@ -1,41 +1,52 @@
-const { CodeQualityChecker } = require('../index.js');
+const { CodeQualityChecker, runQualityCheck } = require('code-quality-lib');
 
-// Example 1: Custom tool selection
-const customChecker = new CodeQualityChecker({
-  tools: ['TypeScript', 'ESLint'], // Only run TypeScript and ESLint
-  commands: {
-    TypeScript: 'tsc --noEmit',
-    ESLint: 'eslint src/ --ext .ts,.tsx'
-  }
-});
+// ─── Example 1: Run all checks with defaults ────────────────────────────────
 
-// Example 2: Different configuration for different environments
-const isCI = process.env.CI === 'true';
-const ciChecker = new CodeQualityChecker({
-  tools: isCI ? ['TypeScript', 'ESLint'] : ['TypeScript', 'ESLint', 'Prettier', 'Knip', 'Snyk'],
-  loadEnv: !isCI // Don't load .env in CI
-});
-
-// Example 3: Programmatic usage
-async function runQualityCheck() {
-  console.log('Running custom quality check...');
-  
-  const result = await customChecker.run();
-  
-  if (result.success) {
-    console.log('✅ Custom checks passed!');
-    return true;
-  } else {
-    console.log('❌ Custom checks failed!');
-    return false;
-  }
+async function example1() {
+  const result = await runQualityCheck();
+  console.log(result.success ? '✅ All passed' : '❌ Some failed');
 }
 
-// Run if called directly
-if (require.main === module) {
-  runQualityCheck().then(success => {
-    process.exit(success ? 0 : 1);
+// ─── Example 2: Custom tool selection ────────────────────────────────────────
+
+async function example2() {
+  const checker = new CodeQualityChecker({
+    tools: ['TypeScript', 'ESLint'], // only run these
   });
+  const result = await checker.run();
+  console.log(`Passed: ${result.results.filter((r) => r.success).length}`);
 }
 
-module.exports = { runQualityCheck };
+// ─── Example 3: Custom commands ──────────────────────────────────────────────
+
+async function example3() {
+  const checker = new CodeQualityChecker({
+    tools: ['TypeScript', 'ESLint', 'Prettier'],
+    commands: {
+      TypeScript: 'tsc --noEmit',
+      ESLint: 'eslint src/ --ext .ts,.tsx',
+      Prettier: 'prettier --check "src/**/*.{ts,tsx}"',
+    },
+  });
+  await checker.run({ showLogs: true });
+}
+
+// ─── Example 4: CI environment ───────────────────────────────────────────────
+
+async function example4() {
+  const isCI = process.env.CI === 'true';
+  const checker = new CodeQualityChecker({
+    tools: isCI
+      ? ['TypeScript', 'ESLint']
+      : ['TypeScript', 'ESLint', 'Prettier', 'Knip', 'Snyk'],
+    packageManager: 'npm',
+    loadEnv: !isCI,
+  });
+  const result = await checker.run({ showLogs: isCI });
+  process.exit(result.success ? 0 : 1);
+}
+
+// Run selected example
+if (require.main === module) {
+  example1();
+}

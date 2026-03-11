@@ -3,17 +3,14 @@
   "version": "2.0.0",
   "description": "A configurable code quality checker library for Node.js projects",
   "main": "index.js",
+  "types": "index.d.ts",
   "bin": {
     "code-quality": "index.js"
   },
   "scripts": {
     "test": "node test/basic.test.js",
-    "test:ci": "node test/basic.test.js",
     "start": "node index.js",
-    "lint": "echo 'Linting not configured yet'",
-    "format": "echo 'Formatting not configured yet'",
-    "build": "echo 'No build step required'",
-    "prepublishOnly": "echo 'Skipping tests for publishing'"
+    "prepublishOnly": "npm test"
   },
   "keywords": [
     "code-quality",
@@ -24,7 +21,7 @@
     "knip",
     "quality-check"
   ],
-  "author": "",
+  "author": "NoonCore",
   "license": "MIT",
   "type": "commonjs",
   "engines": {

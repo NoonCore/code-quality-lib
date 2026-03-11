@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Simple test suite
+// Simple test runner
 function runTest(testName, testFn) {
   try {
     testFn();
@@ -14,137 +14,128 @@ function runTest(testName, testFn) {
   }
 }
 
-// Test 1: Check if main files exist
+// Test 1: Required files exist
 function testFilesExist() {
-  const requiredFiles = [
-    'index.js',
-    'index.d.ts',
-    'package.json',
-    'README.md',
-    'LICENSE'
-  ];
-  
-  requiredFiles.forEach(file => {
-    if (!fs.existsSync(file)) {
-      throw new Error(`Missing file: ${file}`);
-    }
-  });
+  const required = ['index.js', 'index.d.ts', 'package.json', 'README.md', 'LICENSE'];
+  for (const file of required) {
+    if (!fs.existsSync(file)) throw new Error(`Missing file: ${file}`);
+  }
 }
 
-// Test 2: Check package.json structure
+// Test 2: package.json has required fields
 function testPackageJson() {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  
-  if (!pkg.name) throw new Error('Missing name in package.json');
-  if (!pkg.version) throw new Error('Missing version in package.json');
-  if (!pkg.main) throw new Error('Missing main in package.json');
-  if (!pkg.bin) throw new Error('Missing bin in package.json');
-  if (!pkg.engines) throw new Error('Missing engines in package.json');
+  const fields = ['name', 'version', 'main', 'types', 'bin', 'engines', 'author', 'license'];
+  for (const field of fields) {
+    if (!pkg[field]) throw new Error(`Missing or empty "${field}" in package.json`);
+  }
 }
 
-// Test 3: Check TypeScript definitions
+// Test 3: TypeScript definitions match exports
 function testTypeScriptDefinitions() {
-  const dtsContent = fs.readFileSync('index.d.ts', 'utf8');
-  
-  if (!dtsContent.includes('CodeQualityChecker')) {
-    throw new Error('Missing CodeQualityChecker in TypeScript definitions');
-  }
-  
-  if (!dtsContent.includes('CodeQualityOptions')) {
-    throw new Error('Missing CodeQualityOptions in TypeScript definitions');
+  const dts = fs.readFileSync('index.d.ts', 'utf8');
+  const required = ['CodeQualityChecker', 'CodeQualityOptions', 'QualityCheckResult', 'runQualityCheck'];
+  for (const symbol of required) {
+    if (!dts.includes(symbol)) throw new Error(`Missing "${symbol}" in index.d.ts`);
   }
 }
 
-// Test 4: Check if main library can be required
-function testLibraryLoad() {
-  try {
-    // Just check if index.js can be required without errors
-    const indexPath = path.resolve(__dirname, '../index.js');
-    if (!fs.existsSync(indexPath)) {
-      throw new Error('index.js not found');
-    }
-    
-    // Check if it's executable
-    const content = fs.readFileSync(indexPath, 'utf8');
-    if (!content.includes('#!/usr/bin/env node')) {
-      throw new Error('Missing shebang in index.js');
-    }
-  } catch (error) {
-    throw new Error(`Library load failed: ${error.message}`);
+// Test 4: Library exports correct symbols
+function testExports() {
+  const lib = require('../index.js');
+
+  if (typeof lib.CodeQualityChecker !== 'function') {
+    throw new Error('CodeQualityChecker is not exported as a function/class');
+  }
+  if (typeof lib.runQualityCheck !== 'function') {
+    throw new Error('runQualityCheck is not exported as a function');
   }
 }
 
-// Test 5: Check dependencies are listed
+// Test 5: CodeQualityChecker instantiation & options
+function testClassInstantiation() {
+  const { CodeQualityChecker } = require('../index.js');
+
+  // Default options
+  const checker = new CodeQualityChecker({ tools: [] });
+  if (!checker.options) throw new Error('options not initialized');
+  if (!Array.isArray(checker.options.tools)) throw new Error('tools not an array');
+  if (typeof checker.options.packageManager !== 'string') throw new Error('packageManager not detected');
+
+  // Custom options
+  const custom = new CodeQualityChecker({
+    tools: ['TypeScript'],
+    packageManager: 'pnpm',
+    loadEnv: false,
+  });
+  if (custom.options.packageManager !== 'pnpm') throw new Error('packageManager override failed');
+  if (custom.options.tools.length !== 1) throw new Error('tools override failed');
+}
+
+// Test 6: Bundled dependencies exist
 function testDependencies() {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  
-  if (!pkg.dependencies) {
-    throw new Error('No dependencies found in package.json');
+  if (!pkg.dependencies) throw new Error('No dependencies in package.json');
+
+  const required = ['typescript', 'eslint', 'prettier', 'knip', 'snyk'];
+  for (const dep of required) {
+    if (!pkg.dependencies[dep]) throw new Error(`Missing dependency: ${dep}`);
   }
-  
-  const requiredDeps = ['typescript', 'eslint', 'prettier', 'knip', 'snyk'];
-  requiredDeps.forEach(dep => {
-    if (!pkg.dependencies[dep]) {
-      throw new Error(`Missing required dependency: ${dep}`);
-    }
+}
+
+// Test 7: CLI --help
+function testCLIHelp() {
+  const result = execSync('node index.js --help', {
+    encoding: 'utf8',
+    stdio: 'pipe',
+    timeout: 5000,
   });
+  if (!result.includes('Usage:')) throw new Error('--help output missing "Usage:"');
+  if (!result.includes('--logs')) throw new Error('--help output missing "--logs"');
 }
 
-// Test 6: Check CLI functionality
-function testCLI() {
-  try {
-    // Test if CLI can show help without running checks
-    const result = execSync('node index.js --help', { 
-      encoding: 'utf8', 
-      stdio: 'pipe',
-      timeout: 2000 
-    });
-    
-    if (!result.includes('Usage:')) {
-      throw new Error('CLI help output missing');
-    }
-  } catch (error) {
-    // If timeout or other error, just check if --help flag exists in code
-    if (error.code === 'ETIMEDOUT' || error.signal === 'SIGTERM') {
-      const content = fs.readFileSync('index.js', 'utf8');
-      if (!content.includes('--help')) {
-        throw new Error('CLI help flag not implemented');
-      }
-      // Pass if --help is in code even if execution times out
-      return;
-    }
-    if (error.code !== 0) {
-      throw new Error(`CLI test failed: ${error.message}`);
-    }
+// Test 8: CLI --version
+function testCLIVersion() {
+  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  const result = execSync('node index.js --version', {
+    encoding: 'utf8',
+    stdio: 'pipe',
+    timeout: 5000,
+  });
+  if (result.trim() !== pkg.version) {
+    throw new Error(`Version mismatch: CLI="${result.trim()}" package="${pkg.version}"`);
   }
 }
 
-// Run all tests
+// ─── Run All ────────────────────────────────────────────────────────────────
+
 function runAllTests() {
   console.log('🧪 Running Code Quality Library Tests\n');
-  
+
   const tests = [
-    { name: 'Files Exist', fn: testFilesExist },
-    { name: 'Package.json Structure', fn: testPackageJson },
-    { name: 'TypeScript Definitions', fn: testTypeScriptDefinitions },
-    { name: 'Library Load', fn: testLibraryLoad },
-    { name: 'Dependencies', fn: testDependencies },
-    { name: 'CLI Functionality', fn: testCLI }
+    { name: 'Required files exist', fn: testFilesExist },
+    { name: 'package.json structure', fn: testPackageJson },
+    { name: 'TypeScript definitions', fn: testTypeScriptDefinitions },
+    { name: 'Library exports', fn: testExports },
+    { name: 'Class instantiation & options', fn: testClassInstantiation },
+    { name: 'Bundled dependencies', fn: testDependencies },
+    { name: 'CLI --help', fn: testCLIHelp },
+    { name: 'CLI --version', fn: testCLIVersion },
   ];
-  
+
   let passed = 0;
   let failed = 0;
-  
-  tests.forEach(test => {
+
+  for (const test of tests) {
     if (runTest(test.name, test.fn)) {
       passed++;
     } else {
       failed++;
     }
-  });
-  
+  }
+
   console.log(`\n📊 Test Results: ${passed} passed, ${failed} failed`);
-  
+
   if (failed > 0) {
     process.exit(1);
   } else {
@@ -152,7 +143,6 @@ function runAllTests() {
   }
 }
 
-// Run tests if this file is executed directly
 if (require.main === module) {
   runAllTests();
 }

@@ -4,220 +4,289 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-// Parse command line arguments
-const args = process.argv.slice(2);
+// ─── Package Manager Detection ──────────────────────────────────────────────
 
-// Handle --help flag
-if (args.includes('--help') || args.includes('-h')) {
-  console.log('Usage: code-quality [options]');
-  console.log('');
-  console.log('Options:');
-  console.log('  --help, -h     Show this help message');
-  console.log('  --version, -v  Show version number');
-  console.log('  --logs         Show detailed error logs');
-  console.log('');
-  console.log('Runs TypeScript, ESLint, Prettier, Knip, and Snyk checks.');
-  process.exit(0);
+function detectPackageManager() {
+  const cwd = process.cwd();
+  const lockFiles = [
+    { file: 'bun.lock', pm: 'bun' },
+    { file: 'bun.lockb', pm: 'bun' },
+    { file: 'pnpm-lock.yaml', pm: 'pnpm' },
+    { file: 'yarn.lock', pm: 'yarn' },
+    { file: 'package-lock.json', pm: 'npm' },
+  ];
+
+  for (const { file, pm } of lockFiles) {
+    if (fs.existsSync(path.join(cwd, file))) return pm;
+  }
+
+  const binaries = ['bun', 'pnpm', 'yarn'];
+  for (const bin of binaries) {
+    try {
+      execSync(`which ${bin}`, { stdio: 'ignore' });
+      return bin;
+    } catch {
+      // not found, continue
+    }
+  }
+
+  return 'npm';
 }
 
-// Handle --version flag
-if (args.includes('--version') || args.includes('-v')) {
-  const pkg = require('./package.json');
-  console.log(pkg.version);
-  process.exit(0);
+function getExecPrefix(pm) {
+  const map = { bun: 'bunx', pnpm: 'pnpm dlx', yarn: 'yarn dlx', npm: 'npx' };
+  return map[pm] || 'npx';
 }
 
-const showLogs = args.includes('--logs');
+function getRunPrefix(pm) {
+  const map = { bun: 'bun run', pnpm: 'pnpm run', yarn: 'yarn', npm: 'npm run' };
+  return map[pm] || 'npm run';
+}
 
-// Load environment variables from .env file
+// ─── Environment Loading ────────────────────────────────────────────────────
+
 function loadEnvFile() {
   try {
     const envPath = path.join(process.cwd(), '.env');
-    if (fs.existsSync(envPath)) {
-      const envContent = fs.readFileSync(envPath, 'utf8');
-      const lines = envContent.split('\n');
-      
-      lines.forEach(line => {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith('#')) {
-          const [key, ...valueParts] = trimmed.split('=');
-          if (key && valueParts.length > 0) {
-            process.env[key] = valueParts.join('=');
-          }
-        }
-      });
-      
-      console.log('✅ Loaded environment variables from .env');
+    if (!fs.existsSync(envPath)) return;
+
+    const content = fs.readFileSync(envPath, 'utf8');
+    for (const line of content.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex === -1) continue;
+      const key = trimmed.slice(0, eqIndex);
+      const value = trimmed.slice(eqIndex + 1);
+      if (key) process.env[key] = value;
     }
-  } catch (error) {
-    console.log('⚠️  Could not load .env file:', error.message);
+  } catch {
+    // silently continue without .env
   }
 }
 
-loadEnvFile();
+// ─── Tool Path Resolution ───────────────────────────────────────────────────
 
-console.log('\n🔍 Professional Code Quality Check\n');
-console.log('─'.repeat(50));
-console.log('📦 Using bun package manager\n');
-
-if (showLogs) {
-  console.log('📋 Detailed error logging enabled (--logs flag)\n');
+function resolveToolBinDir() {
+  try {
+    return path.join(
+      path.dirname(require.resolve('code-quality-lib/package.json')),
+      'node_modules',
+      '.bin'
+    );
+  } catch {
+    return path.join(__dirname, 'node_modules', '.bin');
+  }
 }
 
-// Prepare report
-const reportPath = path.join(process.cwd(), '.quality-report.md');
-const timestamp = new Date().toISOString();
-let reportContent = `# Code Quality Report\n\n`;
-reportContent += `**Generated**: ${timestamp}\n`;
-reportContent += `**Package Manager**: npm\n\n`;
-reportContent += `---\n\n`;
+// ─── Default Checks ─────────────────────────────────────────────────────────
 
-// Get paths to bundled tools - try to resolve from library location
-let libPath;
-try {
-  libPath = path.dirname(require.resolve('code-quality-lib/package.json'));
-} catch {
-  // Fallback to current directory if running from library itself
-  libPath = __dirname;
-}
-
-const tscPath = path.join(libPath, 'node_modules', '.bin', 'tsc');
-const eslintPath = path.join(libPath, 'node_modules', '.bin', 'eslint');
-const prettierPath = path.join(libPath, 'node_modules', '.bin', 'prettier');
-const knipPath = path.join(libPath, 'node_modules', '.bin', 'knip');
-const snykPath = path.join(libPath, 'node_modules', '.bin', 'snyk');
-
-// Run quality checks using bundled dependencies
-const checks = [
-  { name: 'TypeScript', cmd: `${tscPath} --noEmit`, description: 'Type checking and compilation' },
-  { name: 'ESLint', cmd: `${eslintPath} . --ext .js,.jsx,.ts,.tsx`, description: 'Code linting and style checking' },
-  { name: 'Prettier', cmd: `${prettierPath} --check .`, description: 'Code formatting validation' },
-  { name: 'Knip', cmd: `${knipPath}`, description: 'Dead code detection' },
-  { name: 'Snyk', cmd: `${snykPath} test --severity-threshold=high`, description: 'Security vulnerability scanning' }
+const DEFAULT_TOOLS = [
+  { name: 'TypeScript', bin: 'tsc', args: '--noEmit', description: 'Type checking and compilation' },
+  { name: 'ESLint', bin: 'eslint', args: '. --ext .js,.jsx,.ts,.tsx', description: 'Code linting and style checking' },
+  { name: 'Prettier', bin: 'prettier', args: '--check .', description: 'Code formatting validation' },
+  { name: 'Knip', bin: 'knip', args: '', description: 'Dead code detection' },
+  { name: 'Snyk', bin: 'snyk', args: 'test --severity-threshold=high', description: 'Security vulnerability scanning' },
 ];
 
-let allPassed = true;
-const results = [];
+// ─── CodeQualityChecker Class ───────────────────────────────────────────────
 
-checks.forEach(({ name, cmd, description }) => {
-  console.log(`Running ${name}...`);
-  
-  reportContent += `## ${name}\n\n`;
-  reportContent += `**Description**: ${description}\n\n`;
-  reportContent += `**Command**: \`${cmd}\`\n\n`;
-  
-  try {
-    const output = execSync(cmd, { stdio: 'pipe', encoding: 'utf8' });
-    console.log(`✅ ${name}: Passed`);
-    
-    reportContent += `**Status**: ✅ **PASSED**\n\n`;
-    if (output && output.trim()) {
-      reportContent += `**Output**:\n\`\`\`\n${output.trim()}\n\`\`\`\n\n`;
-      
-      if (showLogs) {
-        console.log(`\n📄 ${name} Output:`);
-        console.log(output.trim());
+class CodeQualityChecker {
+  constructor(options = {}) {
+    this.options = {
+      loadEnv: options.loadEnv !== false,
+      tools: options.tools || DEFAULT_TOOLS.map((t) => t.name),
+      commands: options.commands || {},
+      descriptions: options.descriptions || {},
+      packageManager: options.packageManager || detectPackageManager(),
+    };
+
+    if (this.options.loadEnv) loadEnvFile();
+  }
+
+  _getChecks() {
+    const binDir = resolveToolBinDir();
+    const checks = [];
+
+    for (const toolName of this.options.tools) {
+      const defaultTool = DEFAULT_TOOLS.find((t) => t.name === toolName);
+      if (!defaultTool && !this.options.commands[toolName]) continue;
+
+      const cmd =
+        this.options.commands[toolName] ||
+        `${path.join(binDir, defaultTool.bin)}${defaultTool.args ? ' ' + defaultTool.args : ''}`;
+
+      const description =
+        this.options.descriptions[toolName] ||
+        (defaultTool ? defaultTool.description : toolName);
+
+      checks.push({ name: toolName, cmd, description });
+    }
+
+    return checks;
+  }
+
+  runCommand(command, description) {
+    try {
+      const output = execSync(command, { stdio: 'pipe', encoding: 'utf8' });
+      return { success: true, output: (output || '').trim() };
+    } catch (error) {
+      const output = error.stdout || error.stderr || error.message || 'Unknown error';
+      return { success: false, output: output.trim() };
+    }
+  }
+
+  async run(options = {}) {
+    const showLogs = options.showLogs || false;
+    const checks = this._getChecks();
+    const pm = this.options.packageManager;
+    const runCmd = getRunPrefix(pm);
+    const results = [];
+    let allPassed = true;
+
+    console.log('\n� Professional Code Quality Check\n');
+    console.log('─'.repeat(50));
+    console.log(`📦 Using ${pm} package manager\n`);
+
+    if (showLogs) {
+      console.log('📋 Detailed error logging enabled (--logs flag)\n');
+    }
+
+    for (const { name, cmd, description } of checks) {
+      console.log(`Running ${name}...`);
+      const result = this.runCommand(cmd, description);
+
+      if (result.success) {
+        console.log(`✅ ${name}: Passed`);
+      } else {
+        allPassed = false;
+        console.log(`❌ ${name}: Failed`);
+      }
+
+      if (showLogs && result.output) {
+        const icon = result.success ? '📄' : '❌';
+        console.log(`\n${icon} ${name} ${result.success ? 'Output' : 'Error Details'}:`);
+        console.log('─'.repeat(50));
+        console.log(result.output);
+        console.log('─'.repeat(50));
         console.log('');
       }
+
+      results.push({ name, description, ...result });
     }
-    
-    results.push({ name, status: 'passed', output: output.trim() });
-  } catch (error) {
-    allPassed = false;
-    const errorOutput = error.stdout || error.stderr || error.message || 'Unknown error';
-    console.log(`❌ ${name}: Failed`);
-    
-    // Show errors in terminal if --logs flag is present
-    if (showLogs) {
-      console.log(`\n❌ ${name} Error Details:`);
-      console.log('─'.repeat(50));
-      console.log(errorOutput.trim());
-      console.log('─'.repeat(50));
-      console.log('');
+
+    // Generate report
+    this._writeReport(results, allPassed, pm, runCmd);
+
+    console.log('\n' + '─'.repeat(50));
+
+    if (allPassed) {
+      console.log('\n🎉 All quality checks passed! Code is ready for production.\n');
+    } else {
+      console.log('\n❌ Some quality checks failed. Please fix the issues above.\n');
+      if (!showLogs) {
+        console.log('💡 Run with --logs flag to see detailed errors in terminal');
+      }
+      console.log('📄 See .quality-report.md for detailed error information\n');
     }
-    
-    reportContent += `**Status**: ❌ **FAILED**\n\n`;
-    reportContent += `**Error Output**:\n\`\`\`\n${errorOutput.trim()}\n\`\`\`\n\n`;
-    
-    // Add suggestions for common issues
-    reportContent += `**Suggestions**:\n`;
-    if (name === 'TypeScript') {
-      reportContent += `- Check type errors in the output above\n`;
-      reportContent += `- Run \`npx tsc --noEmit\` to see detailed errors\n`;
-      reportContent += `- Fix type mismatches and missing type definitions\n`;
-    } else if (name === 'ESLint') {
-      reportContent += `- Run \`bun run lint:fix\` to auto-fix issues\n`;
-      reportContent += `- Check ESLint errors in the output above\n`;
-      reportContent += `- Review and fix code style violations\n`;
-    } else if (name === 'Prettier') {
-      reportContent += `- Run \`bun run format:fix\` to auto-format files\n`;
-      reportContent += `- Check formatting issues in the output above\n`;
-    } else if (name === 'Knip') {
-      reportContent += `- Remove unused exports and dependencies\n`;
-      reportContent += `- Check dead code in the output above\n`;
-    } else if (name === 'Snyk') {
-      reportContent += `- Review security vulnerabilities in the output above\n`;
-      reportContent += `- Update vulnerable dependencies\n`;
-      reportContent += `- Run \`npx snyk wizard\` for guided fixes\n`;
-    }
-    reportContent += `\n`;
-    
-    results.push({ name, status: 'failed', error: errorOutput.trim() });
+
+    return {
+      success: allPassed,
+      message: allPassed ? 'All quality checks passed' : 'Some quality checks failed',
+      results,
+    };
   }
-  
-  reportContent += `---\n\n`;
-});
 
-// Add summary
-reportContent += `## Summary\n\n`;
-reportContent += `**Total Checks**: ${checks.length}\n`;
-reportContent += `**Passed**: ${results.filter(r => r.status === 'passed').length}\n`;
-reportContent += `**Failed**: ${results.filter(r => r.status === 'failed').length}\n\n`;
+  _writeReport(results, allPassed, pm, runCmd) {
+    const reportPath = path.join(process.cwd(), '.quality-report.md');
+    const timestamp = new Date().toISOString();
+    const passed = results.filter((r) => r.success);
+    const failed = results.filter((r) => !r.success);
 
-if (allPassed) {
-  reportContent += `### ✅ All quality checks passed!\n\n`;
-  reportContent += `Your code is ready for production.\n\n`;
-} else {
-  reportContent += `### ❌ Some quality checks failed\n\n`;
-  reportContent += `Please review the errors above and fix the issues.\n\n`;
-  reportContent += `**Quick Fix Commands**:\n`;
-  reportContent += `- \`bun run fix\` - Auto-fix linting and formatting\n`;
-  reportContent += `- \`bun run type:check\` - Check TypeScript errors\n`;
-  reportContent += `- \`bun run lint:check\` - Check ESLint errors\n`;
-  reportContent += `- \`bun run format:check\` - Check Prettier formatting\n\n`;
+    let report = `# Code Quality Report\n\n`;
+    report += `**Generated**: ${timestamp}\n`;
+    report += `**Package Manager**: ${pm}\n\n`;
+    report += `---\n\n`;
+
+    for (const r of results) {
+      report += `## ${r.name}\n\n`;
+      report += `**Description**: ${r.description}\n\n`;
+      report += `**Status**: ${r.success ? '✅ **PASSED**' : '❌ **FAILED**'}\n\n`;
+      if (r.output) {
+        report += `**Output**:\n\`\`\`\n${r.output}\n\`\`\`\n\n`;
+      }
+      report += `---\n\n`;
+    }
+
+    report += `## Summary\n\n`;
+    report += `**Total Checks**: ${results.length}\n`;
+    report += `**Passed**: ${passed.length}\n`;
+    report += `**Failed**: ${failed.length}\n\n`;
+
+    if (allPassed) {
+      report += `### ✅ All quality checks passed!\n\nYour code is ready for production.\n\n`;
+    } else {
+      report += `### ❌ Some quality checks failed\n\n`;
+      report += `**Quick Fix Commands**:\n`;
+      report += `- \`${runCmd} lint:fix\` — Auto-fix linting issues\n`;
+      report += `- \`${runCmd} format:fix\` — Auto-format code\n\n`;
+    }
+
+    report += `---\n\n## For AI Agents\n\n`;
+    report += `**Failed Checks**: ${failed.map((r) => r.name).join(', ') || 'None'}\n\n`;
+    if (!allPassed) {
+      report += `**Action Required**:\n`;
+      for (const r of failed) {
+        report += `- Fix ${r.name} errors\n`;
+      }
+      report += `\n`;
+    }
+
+    try {
+      fs.writeFileSync(reportPath, report, 'utf8');
+      console.log(`\n📄 Quality report saved to: .quality-report.md`);
+    } catch (err) {
+      console.error(`\n⚠️  Failed to write report: ${err.message}`);
+    }
+  }
 }
 
-// Add AI Agent section
-reportContent += `---\n\n`;
-reportContent += `## For AI Agents\n\n`;
-reportContent += `This report contains detailed error information for automated code quality fixes.\n\n`;
-reportContent += `**Failed Checks**: ${results.filter(r => r.status === 'failed').map(r => r.name).join(', ') || 'None'}\n\n`;
-if (!allPassed) {
-  reportContent += `**Action Required**:\n`;
-  results.filter(r => r.status === 'failed').forEach(r => {
-    reportContent += `- Fix ${r.name} errors\n`;
+// ─── Convenience Function ───────────────────────────────────────────────────
+
+async function runQualityCheck(options = {}) {
+  const checker = new CodeQualityChecker(options);
+  return checker.run({ showLogs: options.showLogs || false });
+}
+
+// ─── CLI Entry Point ────────────────────────────────────────────────────────
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log('Usage: code-quality [options]');
+    console.log('');
+    console.log('Options:');
+    console.log('  --help, -h     Show this help message');
+    console.log('  --version, -v  Show version number');
+    console.log('  --logs         Show detailed error logs');
+    console.log('');
+    console.log('Runs TypeScript, ESLint, Prettier, Knip, and Snyk checks.');
+    process.exit(0);
+  }
+
+  if (args.includes('--version') || args.includes('-v')) {
+    const pkg = require('./package.json');
+    console.log(pkg.version);
+    process.exit(0);
+  }
+
+  const checker = new CodeQualityChecker();
+  checker.run({ showLogs: args.includes('--logs') }).then((result) => {
+    process.exit(result.success ? 0 : 1);
   });
-  reportContent += `\n`;
 }
 
-// Write report to file (overwrite existing)
-try {
-  fs.writeFileSync(reportPath, reportContent, 'utf8');
-  console.log(`\n📄 Quality report saved to: .quality-report.md`);
-} catch (error) {
-  console.error(`\n⚠️  Failed to write report: ${error.message}`);
-}
+// ─── Exports ────────────────────────────────────────────────────────────────
 
-console.log('\n' + '─'.repeat(50));
-
-if (allPassed) {
-  console.log('\n🎉 All quality checks passed! Code is ready for production.\n');
-  process.exit(0);
-} else {
-  console.log('\n❌ Some quality checks failed. Please fix the issues above.\n');
-  if (!showLogs) {
-    console.log('💡 Run with --logs flag to see detailed errors in terminal');
-  }
-  console.log('📄 See .quality-report.md for detailed error information\n');
-  process.exit(1);
-}
+module.exports = { CodeQualityChecker, runQualityCheck };
