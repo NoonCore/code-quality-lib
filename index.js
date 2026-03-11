@@ -1161,37 +1161,35 @@ async function runWizard() {
     }
   }
 
-  // Step 4: Environment Configuration
+  // Always create environments configuration
+  let environments = {
+    development: { tools: selectedTools },
+    ci: { tools: [...selectedTools, 'Knip', 'Snyk'] },
+    production: { tools: [...selectedTools, 'Knip', 'Snyk'] },
+  }
+
+  // Step 4: Optional environment customization
   console.log('\n🌍 Set up environment-specific tool sets?')
   console.log('This allows different tools for development vs CI/CD')
   const envConfigAnswer = await askQuestion(rl, 'Configure environments? (y/N): ')
   const configureEnvironments = envConfigAnswer.toLowerCase().startsWith('y')
 
-  let environments = {}
   if (configureEnvironments) {
     console.log('\n🔧 Configure development tools (default: ESLint, TypeScript, Prettier):')
     const devTools = []
     for (const tool of allTools) {
-      const isDefaultYes = ['ESLint', 'TypeScript', 'Prettier'].includes(tool)
-      const prompt = isDefaultYes ? `[✓] ${tool}? (Y/n): ` : `[ ] ${tool}? (y/N): `
-      const answer = await askQuestion(rl, prompt)
-
-      if (isDefaultYes) {
-        if (!answer.toLowerCase().startsWith('n')) {
-          devTools.push(tool)
-        }
-      } else {
-        if (answer.toLowerCase().startsWith('y')) {
-          devTools.push(tool)
-        }
+      const answer = await askQuestion(rl, `[${selectedTools.includes(tool) ? '✓' : ' '}] ${tool}? (Y/n): `)
+      if (!answer.toLowerCase().startsWith('n')) {
+        devTools.push(tool)
       }
     }
 
-    console.log('\n🚀 Configure CI/CD tools (default: all tools):')
+    console.log('\n🚀 Configure CI/CD tools (default: ESLint, TypeScript, Prettier, Knip, Snyk):')
     const ciTools = []
     for (const tool of allTools) {
-      const answer = await askQuestion(rl, `[✓] ${tool}? (Y/n): `)
-      if (!answer.toLowerCase().startsWith('n')) {
+      const defaultChecked = ['Knip', 'Snyk'].includes(tool) || selectedTools.includes(tool)
+      const answer = await askQuestion(rl, `[${defaultChecked ? '✓' : ' '}] ${tool}? (${defaultChecked ? 'Y/n' : 'y/N'}): `)
+      if ((defaultChecked && !answer.toLowerCase().startsWith('n')) || (!defaultChecked && answer.toLowerCase().startsWith('y'))) {
         ciTools.push(tool)
       }
     }
@@ -1239,8 +1237,8 @@ async function runWizard() {
     version: '1.0.0',
     packageManager: selectedPm,
     useProjectConfig,
-    tools: configureEnvironments ? undefined : selectedTools,
-    environments: configureEnvironments ? environments : undefined,
+    tools: undefined, // Always use environments now
+    environments: environments, // Always include environments
     loadEnv,
     generated: new Date().toISOString(),
   }
