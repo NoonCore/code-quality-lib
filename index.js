@@ -943,6 +943,7 @@ if (require.main === module) {
     const config = loadConfigFile() || {};
     const results = [];
     let allPassed = true;
+    const checker = new CodeQualityChecker(config);
     
     for (const toolFlag of specificTools) {
       const toolName = toolFlag.replace('--', '');
@@ -987,7 +988,6 @@ if (require.main === module) {
       const fullCommand = `${binPath}${command ? ' ' + command : ''}`;
       
       // Run the specific tool
-      const checker = new CodeQualityChecker(config);
       const result = checker.runCommand(fullCommand, defaultTool.description);
       
       // Parse error counts and lines
