@@ -175,11 +175,24 @@ Different tool sets for different environments:
 
 ```bash
 code-quality --env development    # ESLint, TypeScript, Prettier
-code-quality --env ci             # All tools (ESLint, TS, Prettier, Knip, Snyk)
-code-quality --env production     # All tools (ESLint, TS, Prettier, Knip, Snyk)
+code-quality --env ci             # Add your own ci environment config
+code-quality --env production     # Add your own production environment config
 ```
 
 Or configure environments in `.code-quality/config.json`:
+
+```json
+{
+  "environments": {
+    "development": {
+      "tools": ["ESLint", "TypeScript", "Prettier"]
+    }
+  },
+  "packageManager": "npm"
+}
+```
+
+**Add CI/Production environments manually**:
 
 ```json
 {
@@ -248,7 +261,7 @@ console.log(result.success ? 'All passed' : 'Some failed')
 const customChecker = new CodeQualityChecker({
   environments: {
     development: { tools: ['ESLint', 'TypeScript'] },
-    ci: { tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk'] },
+    // Add ci and production environments as needed
   },
   packageManager: 'npm',
   commands: {

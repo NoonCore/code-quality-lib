@@ -933,12 +933,6 @@ function generateConfigFile() {
       development: {
         tools: ['ESLint', 'TypeScript', 'Prettier'],
       },
-      ci: {
-        tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk'],
-      },
-      production: {
-        tools: ['ESLint', 'TypeScript', 'Prettier', 'Knip', 'Snyk'],
-      },
     },
     packageManager: detectPackageManager(),
     commands: {
@@ -1184,9 +1178,7 @@ async function runWizard() {
 
   // Always create environments configuration
   let environments = {
-    development: { tools: selectedTools },
-    ci: { tools: [...selectedTools, 'Knip', 'Snyk'] },
-    production: { tools: [...selectedTools, 'Knip', 'Snyk'] },
+    development: { tools: selectedTools }
   }
 
   // Step 4: Optional environment customization

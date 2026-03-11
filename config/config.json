@@ -7,24 +7,6 @@
         "TypeScript",
         "Prettier"
       ]
-    },
-    "ci": {
-      "tools": [
-        "ESLint",
-        "TypeScript",
-        "Prettier",
-        "Knip",
-        "Snyk"
-      ]
-    },
-    "production": {
-      "tools": [
-        "ESLint",
-        "TypeScript",
-        "Prettier",
-        "Knip",
-        "Snyk"
-      ]
     }
   }
 }
