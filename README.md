@@ -15,6 +15,9 @@
 - **CLI + Library** — use from terminal or programmatically
 - **Detailed reports** — generates `.quality-report.md` with AI-friendly error info
 - **`--logs` flag** — verbose terminal output for debugging
+- **`--fix` flag** — auto-fix ESLint and Prettier issues automatically
+- **Environment-based configs** — different tools for dev vs CI/CD
+- **Snyk token validation** — validates tokens before running security scans
 - **TypeScript definitions** — full type safety included
 
 ## Installation
@@ -46,6 +49,10 @@ code-quality              # run all quality checks
 code-quality --wizard     # run interactive setup wizard
 code-quality --config     # generate .code-quality.json config file
 code-quality --logs       # show detailed error output
+code-quality --fix        # auto-fix ESLint and Prettier issues
+code-quality --env dev    # run development checks (ESLint, TS, Prettier)
+code-quality --env ci     # run CI/CD checks (all tools)
+code-quality --env prod    # run production checks (all tools)
 code-quality --help       # show help
 code-quality --version    # show version
 ```
@@ -144,6 +151,57 @@ The CLI provides step-by-step progress like setup wizards:
 ✅ Your code is ready for production!
 ```
 
+### Auto-Fix with --fix
+
+Automatically fix ESLint and Prettier issues:
+
+```bash
+code-quality --fix                    # Fix all issues
+code-quality --env prod --fix          # Fix in production mode
+code-quality --ESLint --fix           # Fix only ESLint
+code-quality --Prettier --fix         # Fix only Prettier
+```
+
+The `--fix` flag will:
+1. Run quality checks normally
+2. If ESLint or Prettier fail, automatically run:
+   - `eslint --fix` for ESLint issues
+   - `prettier --write` for Prettier issues
+3. Re-run checks to verify fixes
+4. Show final results
+
+### Environment-Based Configuration
+
+Different tool sets for different environments:
+
+```bash
+code-quality --env development    # ESLint, TypeScript, Prettier
+code-quality --env ci             # All tools (ESLint, TS, Prettier, Knip, Snyk)
+code-quality --env production     # All tools (ESLint, TS, Prettier, Knip, Snyk)
+```
+
+Or configure environments in `.code-quality/config.json`:
+
+```json
+{
+  "version": "1.0.0",
+  "environments": {
+    "development": {
+      "tools": ["ESLint", "TypeScript", "Prettier"]
+    },
+    "ci": {
+      "tools": ["ESLint", "TypeScript", "Prettier", "Knip", "Snyk"]
+    },
+    "production": {
+      "tools": ["ESLint", "TypeScript", "Prettier", "Knip", "Snyk"]
+    }
+  },
+  "packageManager": "npm",
+  "useProjectConfig": true,
+  "loadEnv": true
+}
+```
+
 ### Configuration Directory
 
 Generate a configuration directory with reference configs:
@@ -160,25 +218,6 @@ This creates `.code-quality/` directory with:
 - **.prettierrc** — Prettier reference config
 - **knip.json** — Knip reference config
 - **README.md** — Usage documentation
-
-Example `config.json`:
-
-```json
-{
-  "version": "1.0.0",
-  "tools": ["TypeScript", "ESLint", "Prettier", "Knip", "Snyk"],
-  "packageManager": "npm",
-  "useProjectConfig": true,
-  "loadEnv": true,
-  "commands": {
-    "TypeScript": "tsc --noEmit",
-    "ESLint": ". --ext .js,.jsx,.ts,.tsx",
-    "Prettier": "--check .",
-    "Knip": "",
-    "Snyk": "test --severity-threshold=high"
-  }
-}
-```
 
 The CLI automatically loads `.code-quality/config.json` if it exists:
 
@@ -256,6 +295,15 @@ console.log(result.results) // per-tool results array
 | `commands`         | `Record<string, string>`             | bundled paths | Custom commands per tool                                                                    |
 | `descriptions`     | `Record<string, string>`             | built-in      | Custom descriptions per tool                                                                |
 | `loadEnv`          | `boolean`                            | `true`        | Load `.env` file                                                                            |
+| `environment`      | `string`                             | auto-detected | Override environment (development, ci, production)                                        |
+| `environments`     | `Record<string, EnvironmentConfig>` | -             | Environment-specific tool configurations                                                 |
+
+**EnvironmentConfig:**
+```typescript
+interface EnvironmentConfig {
+  tools: string[]
+}
+```
 
 ## Tool Resolution
 
@@ -302,6 +350,37 @@ Every run generates `.quality-report.md` with:
 - AI-friendly structured information for automated fixes
 
 Add `.quality-report.md` to your `.gitignore`.
+
+## Snyk Token Validation
+
+The library validates Snyk tokens before running security scans:
+
+```bash
+# Set your Snyk token
+export SNYK_TOKEN=your_token_here
+
+# Or add to .env file
+echo "SNYK_TOKEN=your_token_here" >> .env
+
+# Run with validation
+code-quality --env production
+```
+
+**Token Validation Features:**
+- **Pre-scan validation** - Checks token before running full scan
+- **Clear cache** - Forces token validation by clearing Snyk cache
+- **Detailed errors** - Shows helpful fix instructions for invalid tokens
+- **Fallback handling** - Graceful degradation for token issues
+
+**Error Messages:**
+```
+❌ Snyk token validation failed. Token may be expired or invalid.
+
+To fix:
+1. Get a new token at: https://snyk.io/login
+2. Set SNYK_TOKEN in your .env file
+3. Or run: npx snyk auth
+```
 
 ## AI Skills
 
