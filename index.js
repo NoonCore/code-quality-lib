@@ -267,8 +267,8 @@ class CodeQualityChecker {
 
     switch (toolName) {
       case 'TypeScript': {
-        // Parse individual TypeScript errors
-        const errorLines = output.split('\n').filter(line => line.includes('error TS'));
+        // Parse individual TypeScript errors in tsc format
+        const errorLines = output.split('\n').filter(line => line.includes(' - error TS'));
         errors = errorLines.length;
         
         // Also try the "Found X errors" format as fallback
@@ -323,13 +323,14 @@ class CodeQualityChecker {
 
     switch (toolName) {
       case 'TypeScript': {
-        // Extract individual TypeScript error lines
+        // Extract individual TypeScript error lines in tsc format
         const lines = output.split('\n');
-        for (const line of lines) {
-          if (line.includes('error TS') && line.includes('):')) {
-            // Format: file.ts(line,column): error TS####: message
-            const cleanLine = line.trim();
-            errorLines.push(cleanLine);
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          
+          // Match tsc error format: "src/file.ts:58:17 - error TS2552: Cannot find name"
+          if (line.includes(' - error TS') && line.includes(':')) {
+            errorLines.push(line);
           }
         }
         break;
