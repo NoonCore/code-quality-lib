@@ -21,6 +21,7 @@
 - 📄 Detailed error reports for developers and AI agents
 - 🔍 --logs flag for verbose terminal output
 - 🤖 AI-friendly structured error information
+- 📦 **All dependencies bundled** - No need to install TypeScript, ESLint, Prettier, Knip, or Snyk separately!
 
 ## Installation
 
@@ -145,12 +146,20 @@ checker.run().then(result => {
 
 ### Default Tools
 
-The library runs these tools by default:
-- **TypeScript** - Type checking and compilation
-- **ESLint** - Code linting and style checking  
-- **Prettier** - Code formatting validation
-- **Knip** - Dead code detection and unused exports
-- **Snyk** - Security vulnerability scanning
+The library runs these tools by default (all bundled, no separate installation needed):
+- **TypeScript** (v5.8.3) - Type checking and compilation
+- **ESLint** (v9.18.0) - Code linting and style checking with plugins:
+  - @typescript-eslint/eslint-plugin & parser
+  - eslint-plugin-react & react-hooks
+  - eslint-plugin-prettier
+  - eslint-plugin-sonarjs
+  - eslint-plugin-unicorn
+  - eslint-plugin-import
+- **Prettier** (v3.4.2) - Code formatting validation
+- **Knip** (v5.43.2) - Dead code detection and unused exports
+- **Snyk** (v1.1293.1) - Security vulnerability scanning
+
+**No need to install these tools separately!** Everything is bundled with the library.
 
 ### Custom Configuration
 

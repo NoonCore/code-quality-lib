@@ -48,16 +48,31 @@ const reportPath = path.join(process.cwd(), '.quality-report.md');
 const timestamp = new Date().toISOString();
 let reportContent = `# Code Quality Report\n\n`;
 reportContent += `**Generated**: ${timestamp}\n`;
-reportContent += `**Package Manager**: bun\n\n`;
+reportContent += `**Package Manager**: npm\n\n`;
 reportContent += `---\n\n`;
 
-// Run quality checks
+// Get paths to bundled tools - try to resolve from library location
+let libPath;
+try {
+  libPath = path.dirname(require.resolve('code-quality-lib/package.json'));
+} catch {
+  // Fallback to current directory if running from library itself
+  libPath = __dirname;
+}
+
+const tscPath = path.join(libPath, 'node_modules', '.bin', 'tsc');
+const eslintPath = path.join(libPath, 'node_modules', '.bin', 'eslint');
+const prettierPath = path.join(libPath, 'node_modules', '.bin', 'prettier');
+const knipPath = path.join(libPath, 'node_modules', '.bin', 'knip');
+const snykPath = path.join(libPath, 'node_modules', '.bin', 'snyk');
+
+// Run quality checks using bundled dependencies
 const checks = [
-  { name: 'TypeScript', cmd: 'npx tsc --noEmit', description: 'Type checking and compilation' },
-  { name: 'ESLint', cmd: 'npx eslint . --ext .js,.jsx,.ts,.tsx', description: 'Code linting and style checking' },
-  { name: 'Prettier', cmd: 'npx prettier --check .', description: 'Code formatting validation' },
-  { name: 'Knip', cmd: 'npx knip', description: 'Dead code detection' },
-  { name: 'Snyk', cmd: 'npx snyk test --severity-threshold=high', description: 'Security vulnerability scanning' }
+  { name: 'TypeScript', cmd: `${tscPath} --noEmit`, description: 'Type checking and compilation' },
+  { name: 'ESLint', cmd: `${eslintPath} . --ext .js,.jsx,.ts,.tsx`, description: 'Code linting and style checking' },
+  { name: 'Prettier', cmd: `${prettierPath} --check .`, description: 'Code formatting validation' },
+  { name: 'Knip', cmd: `${knipPath}`, description: 'Dead code detection' },
+  { name: 'Snyk', cmd: `${snykPath} test --severity-threshold=high`, description: 'Security vulnerability scanning' }
 ];
 
 let allPassed = true;

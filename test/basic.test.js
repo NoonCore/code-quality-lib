@@ -66,8 +66,8 @@ function testLibraryLoad() {
       throw new Error('CodeQualityChecker not exported');
     }
     
-    // Test instantiation
-    const checker = new CodeQualityChecker();
+    // Test instantiation with empty tools to avoid running actual checks
+    const checker = new CodeQualityChecker({ tools: [] });
     
     if (!checker.options) {
       throw new Error('Checker options not initialized');
