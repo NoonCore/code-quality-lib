@@ -483,6 +483,25 @@ async function runWizard() {
     output: process.stdout
   });
 
+  // Check if config already exists
+  const existingConfig = loadConfigFile();
+  if (existingConfig) {
+    console.log('\n📋 Found existing configuration:');
+    console.log(`📦 Package Manager: ${existingConfig.packageManager || 'auto-detected'}`);
+    console.log(`⚙️  Config: ${existingConfig.useProjectConfig !== false ? 'Project configs' : 'Bundled configs'}`);
+    console.log(`🔧 Tools: ${(existingConfig.tools || ['TypeScript', 'ESLint', 'Prettier', 'Knip', 'Snyk']).join(', ')}`);
+    console.log(`🌍 Load .env: ${existingConfig.loadEnv !== false ? 'Yes' : 'No'}`);
+    
+    const rerun = await askQuestion(rl, '\nReconfigure? (y/N): ');
+    if (!rerun.toLowerCase().startsWith('y')) {
+      rl.close();
+      // Run with existing config
+      const checker = new CodeQualityChecker(existingConfig);
+      const result = await checker.run({ showLogs: false });
+      process.exit(result.success ? 0 : 1);
+    }
+  }
+
   console.log('\n🧙‍♂️ Code Quality Setup Wizard');
   console.log('─'.repeat(50));
   console.log('Let\'s configure your quality checks!\n');
@@ -495,23 +514,26 @@ async function runWizard() {
     await askQuestion(rl, 'Enter package manager (npm/bun/pnpm/yarn): ') : pm;
 
   // Step 2: Config Type
-  console.log('\n⚙️  Config Options:');
-  console.log('1. Project configs (use your .eslintrc, .prettierrc, etc.)');
-  console.log('2. Bundled configs (use library\'s built-in configs)');
-  const configAnswer = await askQuestion(rl, 'Choose config type (1/2) [1]: ');
-  const useProjectConfig = configAnswer !== '2';
+  console.log('\n⚙️  Use project config files (.eslintrc, .prettierrc, etc.)?');
+  console.log('Answer "No" to use bundled configs from code-quality-lib');
+  const configAnswer = await askQuestion(rl, 'Use project configs? (y/N): ');
+  const useProjectConfig = configAnswer.toLowerCase().startsWith('y');
 
-  // Step 3: Tools Selection
-  console.log('\n🔧 Select tools to run (space-separated, or "all"):');
-  console.log('Available: TypeScript, ESLint, Prettier, Knip, Snyk');
-  const toolsAnswer = await askQuestion(rl, 'Tools [all]: ');
-  const tools = toolsAnswer.toLowerCase() === 'all' || !toolsAnswer.trim() ?
-    ['TypeScript', 'ESLint', 'Prettier', 'Knip', 'Snyk'] :
-    toolsAnswer.split(/\s+/).map(t => t.trim()).filter(t => t);
+  // Step 3: Tools Selection (Checkbox style)
+  console.log('\n🔧 Select tools to run (default = all checked):');
+  const allTools = ['TypeScript', 'ESLint', 'Prettier', 'Knip', 'Snyk'];
+  const selectedTools = [];
+  
+  for (const tool of allTools) {
+    const answer = await askQuestion(rl, `[✓] ${tool}? (Y/n): `);
+    if (!answer.toLowerCase().startsWith('n')) {
+      selectedTools.push(tool);
+    }
+  }
 
   // Step 4: Load .env
-  console.log('\n🌍 Environment Variables:');
-  const envAnswer = await askQuestion(rl, 'Load .env file before checks? (Y/n) [Y]: ');
+  console.log('\n🌍 Load .env file before running checks?');
+  const envAnswer = await askQuestion(rl, 'Load .env? (Y/n): ');
   const loadEnv = !envAnswer.toLowerCase().startsWith('n');
 
   // Step 5: Show summary and confirm
@@ -519,7 +541,7 @@ async function runWizard() {
   console.log('─'.repeat(50));
   console.log(`📦 Package Manager: ${selectedPm}`);
   console.log(`⚙️  Config: ${useProjectConfig ? 'Project configs' : 'Bundled configs'}`);
-  console.log(`🔧 Tools: ${tools.join(', ')}`);
+  console.log(`🔧 Tools: ${selectedTools.join(', ')}`);
   console.log(`🌍 Load .env: ${loadEnv ? 'Yes' : 'No'}`);
   console.log('─'.repeat(50));
 
@@ -532,14 +554,25 @@ async function runWizard() {
     process.exit(0);
   }
 
-  // Run with wizard settings
+  // Save config for next time
   const config = {
+    version: '1.0.0',
     packageManager: selectedPm,
     useProjectConfig,
-    tools,
-    loadEnv
+    tools: selectedTools,
+    loadEnv,
+    generated: new Date().toISOString()
   };
 
+  try {
+    const configPath = path.join(process.cwd(), '.code-quality.json');
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    console.log(`\n💾 Configuration saved to: ${configPath}`);
+  } catch (error) {
+    console.warn('\n⚠️  Could not save configuration file');
+  }
+
+  // Run with wizard settings
   const checker = new CodeQualityChecker(config);
   const result = await checker.run({ showLogs: false });
   

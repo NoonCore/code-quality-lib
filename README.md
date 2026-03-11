@@ -64,27 +64,35 @@ Let's configure your quality checks!
 📦 Detected package manager: npm
 Use npm? (Y/n): 
 
-⚙️  Config Options:
-1. Project configs (use your .eslintrc, .prettierrc, etc.)
-2. Bundled configs (use library's built-in configs)
-Choose config type (1/2) [1]: 
+⚙️  Use project config files (.eslintrc, .prettierrc, etc.)?
+Answer "No" to use bundled configs from code-quality-lib
+Use project configs? (y/N): 
 
-🔧 Select tools to run (space-separated, or "all"):
-Available: TypeScript, ESLint, Prettier, Knip, Snyk
-Tools [all]: 
+🔧 Select tools to run (default = all checked):
+[✓] TypeScript? (Y/n): 
+[✓] ESLint? (Y/n): 
+[✓] Prettier? (Y/n): 
+[✓] Knip? (Y/n): 
+[✓] Snyk? (Y/n): 
 
-🌍 Environment Variables:
-Load .env file before checks? (Y/n) [Y]: 
+🌍 Load .env file before running checks?
+Load .env? (Y/n): 
 
 📋 Configuration Summary:
 ──────────────────────────────────────────────────
 📦 Package Manager: npm
-⚙️  Config: Project configs
+⚙️  Config: Bundled configs
 🔧 Tools: TypeScript, ESLint, Prettier, Knip, Snyk
 🌍 Load .env: Yes
 ──────────────────────────────────────────────────
 Run checks with these settings? (Y/n): 
 ```
+
+**Smart Features:**
+- **Remember settings** — First run creates `.code-quality.json`, future runs skip questions
+- **Yes/No questions** — Simple Y/n prompts with sensible defaults
+- **Checkbox-style tools** — Each tool can be individually enabled/disabled
+- **Bundled configs default** — Uses library's built-in configs by default
 
 After confirmation, it runs the quality checks with your selected settings.
 
