@@ -631,9 +631,18 @@ if (require.main === module) {
     return;
   }
 
-  // Load config file if exists
+  // Load config file if exists, if not - run wizard automatically
   const config = loadConfigFile();
-  const checker = new CodeQualityChecker(config || {});
+  if (!config) {
+    console.log('🔧 No configuration found. Starting setup wizard...\n');
+    runWizard().catch(err => {
+      console.error('❌ Wizard error:', err.message);
+      process.exit(1);
+    });
+    return;
+  }
+
+  const checker = new CodeQualityChecker(config);
   checker.run({ showLogs: args.includes('--logs') }).then((result) => {
     process.exit(result.success ? 0 : 1);
   });

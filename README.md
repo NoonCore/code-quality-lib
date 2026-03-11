@@ -29,10 +29,14 @@ yarn add -D code-quality-lib        # yarn
 ## Quick Start
 
 ```bash
-npx code-quality          # npm
-bunx code-quality         # bun
-pnpm dlx code-quality     # pnpm
-yarn dlx code-quality     # yarn
+# Install and run (first time will auto-start wizard)
+npm install -D code-quality-lib && npx code-quality
+
+# Or with bun
+bun add -D code-quality-lib && bunx code-quality
+
+# Or with yarn
+yarn add -D code-quality-lib && yarn code-quality
 ```
 
 ## CLI Usage
@@ -95,6 +99,17 @@ Run checks with these settings? (Y/n):
 - **Bundled configs default** — Uses library's built-in configs by default
 
 After confirmation, it runs the quality checks with your selected settings.
+
+### Auto-Wizard on First Run
+
+If you run `code-quality` without any configuration file, it automatically starts the wizard:
+
+```bash
+code-quality    # First run: no config found → starts wizard
+code-quality    # Subsequent runs: uses saved settings
+```
+
+This ensures proper setup on first use while being fast on subsequent runs.
 
 ### Terminal Output
 
