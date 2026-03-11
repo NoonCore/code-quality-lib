@@ -119,5 +119,6 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# Keep package-lock.json (needed for CI/CD)
+# Keep lock files for CI/CD
 !package-lock.json
+!yarn.lock
