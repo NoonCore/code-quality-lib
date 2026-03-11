@@ -941,6 +941,8 @@ if (require.main === module) {
   // If specific tools are requested, run them directly
   if (specificTools.length > 0) {
     const config = loadConfigFile() || {};
+    const results = [];
+    let allPassed = true;
     
     for (const toolFlag of specificTools) {
       const toolName = toolFlag.replace('--', '');
@@ -988,17 +990,30 @@ if (require.main === module) {
       const checker = new CodeQualityChecker(config);
       const result = checker.runCommand(fullCommand, defaultTool.description);
       
+      // Parse error counts and lines
+      const counts = checker._parseErrorCounts(toolName, result.output);
+      const errorLines = checker._parseErrorLines(toolName, result.output);
+      
+      const resultData = {
+        name: toolName,
+        description: defaultTool.description,
+        ...result,
+        ...counts,
+        errorLines
+      };
+      
+      results.push(resultData);
+      
       const icon = result.success ? '✅' : '❌';
       const status = result.success ? (useFix ? 'Fixed' : 'Passed') : 'Failed';
       
       console.log(`${icon} ${toolName}... ${status}`);
       
+      // Show error details if failed and logs enabled
       if (!result.success && args.includes('--logs')) {
         console.log(`\n❌ ${toolName} Error:`);
         console.log('─'.repeat(50));
         
-        // Show parsed error lines for better AI analysis
-        const errorLines = checker._parseErrorLines(toolName, result.output);
         if (errorLines.length > 0) {
           console.log('📝 Individual Errors:');
           for (const errorLine of errorLines) {
@@ -1012,14 +1027,62 @@ if (require.main === module) {
         console.log('─'.repeat(50));
       }
       
-      // Exit with error code if tool failed
       if (!result.success) {
-        process.exit(1);
+        allPassed = false;
       }
     }
     
-    console.log('\n🎉 All specified tools passed!\n');
-    process.exit(0);
+    // Generate report for AI analysis
+    const pm = config.packageManager || detectPackageManager();
+    const runCmd = getRunPrefix(pm);
+    checker._writeReport(results, allPassed, pm, runCmd);
+    
+    // Show summary with error details for AI
+    console.log('\n' + '─'.repeat(50));
+    console.log('📊 Tool-Specific Check Summary\n');
+    
+    for (const result of results) {
+      const icon = result.success ? '✅' : '❌';
+      const name = result.name.padEnd(12, ' ');
+      let status = result.success ? (useFix ? 'Fixed' : 'Passed') : 'Failed';
+      
+      if (!result.success && (result.errors > 0 || result.warnings > 0)) {
+        const parts = [];
+        if (result.errors > 0) parts.push(`${result.errors} error${result.errors !== 1 ? 's' : ''}`);
+        if (result.warnings > 0) parts.push(`${result.warnings} warning${result.warnings !== 1 ? 's' : ''}`);
+        status = `${status} (${parts.join(', ')})`;
+      }
+      
+      console.log(`${icon} ${name}${status}`);
+      
+      // Show individual error lines for failed tools
+      if (!result.success && result.errorLines && result.errorLines.length > 0) {
+        console.log(`   📝 Error details:`);
+        for (const errorLine of result.errorLines) {
+          console.log(`   • ${errorLine}`);
+        }
+      }
+    }
+    
+    console.log('\n' + '─'.repeat(50));
+    
+    if (!allPassed) {
+      console.log('🤖 For AI Analysis - Summary of All Errors:\n');
+      for (const result of results) {
+        if (!result.success && result.errorLines && result.errorLines.length > 0) {
+          console.log(`## ${result.name} Errors:`);
+          for (const errorLine of result.errorLines) {
+            console.log(errorLine);
+          }
+          console.log(''); // Empty line between tools
+        }
+      }
+      console.log('📄 See .quality-report.md for complete details\n');
+    } else {
+      console.log('🎉 All specified tools passed!\n');
+    }
+    
+    process.exit(allPassed ? 0 : 1);
   }
 
   // Parse environment flag
