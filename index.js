@@ -839,7 +839,37 @@ async function runQualityCheck(options = {}) {
 
 function initConfigFiles() {
   const rootDir = process.cwd()
-  const libConfigDir = path.join(__dirname, 'config')
+  
+  // Try multiple approaches to find the config directory
+  let libConfigDir
+  
+  // Method 1: Use __filename if it points to the actual script
+  if (__filename !== '[eval]' && !__filename.includes('bunx')) {
+    const scriptPath = path.resolve(__filename)
+    const packageDir = path.dirname(scriptPath)
+    libConfigDir = path.join(packageDir, 'config')
+  }
+  
+  // Method 2: Try to find the package via require.resolve
+  if (!libConfigDir || !fs.existsSync(libConfigDir)) {
+    try {
+      const packagePath = path.dirname(require.resolve('code-quality-lib/package.json'))
+      libConfigDir = path.join(packagePath, 'config')
+    } catch (e) {
+      // Continue to next method
+    }
+  }
+  
+  // Method 3: Use global npm path
+  if (!libConfigDir || !fs.existsSync(libConfigDir)) {
+    const npmPrefix = process.env.npm_config_prefix || '/opt/homebrew'
+    libConfigDir = path.join(npmPrefix, 'lib', 'node_modules', 'code-quality-lib', 'config')
+  }
+  
+  // Method 4: Fallback to local config directory
+  if (!libConfigDir || !fs.existsSync(libConfigDir)) {
+    libConfigDir = path.join(__dirname, 'config')
+  }
 
   console.log('\n🚀 Initializing config files in root directory...\n')
 
