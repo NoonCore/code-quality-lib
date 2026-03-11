@@ -15,12 +15,13 @@
   ],
   "ignoreBinaries": ["code-quality"],
   "ignoreDependencies": [
+    "eslint*",
+    "prettier*",
     "@types/*",
-    "eslint",
-    "prettier",
     "typescript",
-    "vitest",
-    "storybook"
+    "knip",
+    "snyk",
+    "code-quality-lib"
   ],
   "rules": {
     "dependencies": {

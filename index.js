@@ -233,6 +233,57 @@ class CodeQualityChecker {
     }
   }
 
+  _parseErrorCounts(toolName, output) {
+    if (!output) return { errors: 0, warnings: 0 };
+
+    let errors = 0;
+    let warnings = 0;
+
+    switch (toolName) {
+      case 'TypeScript': {
+        // TypeScript format: "Found X errors"
+        const errorMatch = output.match(/Found (\d+) errors?/);
+        if (errorMatch) errors = parseInt(errorMatch[1], 10);
+        break;
+      }
+      case 'ESLint': {
+        // ESLint format: "✖ X problems (Y errors, Z warnings)"
+        const problemMatch = output.match(/(\d+) errors?, (\d+) warnings?/);
+        if (problemMatch) {
+          errors = parseInt(problemMatch[1], 10);
+          warnings = parseInt(problemMatch[2], 10);
+        } else {
+          const errorOnlyMatch = output.match(/(\d+) errors?/);
+          const warningOnlyMatch = output.match(/(\d+) warnings?/);
+          if (errorOnlyMatch) errors = parseInt(errorOnlyMatch[1], 10);
+          if (warningOnlyMatch) warnings = parseInt(warningOnlyMatch[1], 10);
+        }
+        break;
+      }
+      case 'Prettier': {
+        // Prettier lists files that need formatting
+        const lines = output.split('\n').filter(line => line.trim() && !line.includes('Code style issues'));
+        errors = lines.length;
+        break;
+      }
+      case 'Knip': {
+        // Knip shows issues per category
+        const issueMatches = output.match(/\d+\s+(unused|unlisted|unresolved|duplicate)/gi);
+        if (issueMatches) {
+          errors = issueMatches.reduce((sum, match) => {
+            const num = parseInt(match.match(/\d+/)[0], 10);
+            return sum + num;
+          }, 0);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+
+    return { errors, warnings };
+  }
+
   async run(options = {}) {
     const showLogs = options.showLogs || false;
     const checks = this._getChecks();
@@ -296,7 +347,8 @@ class CodeQualityChecker {
         console.log('   ' + '─'.repeat(48));
       }
 
-      results.push({ name, description, ...result });
+      const counts = this._parseErrorCounts(name, result.output);
+      results.push({ name, description, ...result, ...counts });
       step++;
     }
 
@@ -310,11 +362,20 @@ class CodeQualityChecker {
     const passed = results.filter(r => r.success);
     const failed = results.filter(r => !r.success);
     
-    // Show results with checkmarks/strikes
+    // Show results with checkmarks/strikes and error counts
     for (const result of results) {
       const icon = result.success ? '✅' : '❌';
       const name = result.name.padEnd(12, ' ');
-      console.log(`${icon} ${name}${result.success ? 'Passed' : 'Failed'}`);
+      let status = result.success ? 'Passed' : 'Failed';
+      
+      if (!result.success && (result.errors > 0 || result.warnings > 0)) {
+        const parts = [];
+        if (result.errors > 0) parts.push(`${result.errors} error${result.errors !== 1 ? 's' : ''}`);
+        if (result.warnings > 0) parts.push(`${result.warnings} warning${result.warnings !== 1 ? 's' : ''}`);
+        status = `${status} (${parts.join(', ')})`;
+      }
+      
+      console.log(`${icon} ${name}${status}`);
     }
     
     console.log('\n' + '─'.repeat(50));
