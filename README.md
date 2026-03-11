@@ -1,6 +1,6 @@
 # Code Quality Library
 
-[![npm version](https://badge.fury.io/js/code-quality-lib.svg)](https://badge.fury.io/js/code-quality-lib)
+[![npm version](https://img.shields.io/npm/v/code-quality-lib)](https://www.npmjs.com/package/code-quality-lib)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-18.x%20%7C%2020.x%20%7C%2022.x%20%7C%2025.x-brightgreen)](https://nodejs.org/)
 [![Bun Version](https://img.shields.io/badge/bun-1.3.x-black)](https://bun.sh/)
@@ -8,7 +8,6 @@
 [![Yarn Version](https://img.shields.io/badge/yarn-4.13.0-2c8ebb)](https://yarnpkg.com/)
 [![Downloads](https://img.shields.io/npm/dm/code-quality-lib.svg)](https://www.npmjs.com/package/code-quality-lib)
 [![CI/CD](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml/badge.svg)](https://github.com/NoonCore/code-quality-lib/actions/workflows/ci.yml)
-[![Package Managers](https://img.shields.io/badge/npm%20%7C%20bun%20%7C%20pnpm%20%7C%20yarn-support-blue)](https://github.com/NoonCore/code-quality-lib)
 [![TypeScript](https://img.shields.io/badge/TypeScript-included-blue)](https://www.typescriptlang.org/)
 
 > 🚀 A configurable code quality checker for Node.js that auto-detects your package manager and runs TypeScript, ESLint, Prettier, Knip, and Snyk.
