@@ -720,7 +720,7 @@ function initConfigFiles() {
   console.log('\n🚀 Initializing config files in root directory...\n');
   
   const configFiles = [
-    { src: 'eslint.config.mjs', dest: 'eslint.config.js', desc: 'ESLint configuration' },
+    { src: 'eslint.config.mjs', dest: 'eslint.config.mjs', desc: 'ESLint configuration' },
     { src: 'tsconfig.json', dest: 'tsconfig.json', desc: 'TypeScript configuration' },
     { src: '.prettierrc', dest: '.prettierrc', desc: 'Prettier configuration' },
     { src: '.prettierignore', dest: '.prettierignore', desc: 'Prettier ignore patterns' },

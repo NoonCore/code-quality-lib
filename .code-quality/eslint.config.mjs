@@ -8,6 +8,14 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 
+// Try to import Next.js plugin if available, but don't fail if not
+let nextPlugin;
+try {
+  nextPlugin = require('eslint-plugin-next');
+} catch (e) {
+  // Next.js plugin not available, continue without it
+}
+
 const eslintConfig = [
   {
     ignores: [
@@ -74,6 +82,7 @@ const eslintConfig = [
       sonarjs,
       unicorn,
       import: importPlugin,
+      ...(nextPlugin ? { '@next/next': nextPlugin } : {}),
     },
     rules: {
       // React
@@ -113,9 +122,11 @@ const eslintConfig = [
       '@typescript-eslint/prefer-as-const': 'warn',
 
       // Next.js (if available)
-      '@next/next/no-html-link-for-pages': 'off',
-      '@next/next/no-img-element': 'warn',
-      '@next/next/no-sync-scripts': 'warn',
+      ...(nextPlugin ? {
+        '@next/next/no-html-link-for-pages': 'off',
+        '@next/next/no-img-element': 'warn',
+        '@next/next/no-sync-scripts': 'warn',
+      } : {}),
 
       // Accessibility
       'jsx-a11y/alt-text': 'warn',
