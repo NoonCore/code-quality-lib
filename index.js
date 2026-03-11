@@ -274,10 +274,17 @@ class CodeQualityChecker {
             '⚠️  SNYK_TOKEN not found in environment variables. Please set SNYK_TOKEN in your .env file or run:\n  export SNYK_TOKEN=your_token_here\n\nYou can get a free token at: https://snyk.io/login',
         }
       }
+      // Debug: Verify token is present
+      // console.log('DEBUG: SNYK_TOKEN present:', !!process.env.SNYK_TOKEN)
     }
 
     try {
-      const output = execSync(command, { stdio: 'pipe', encoding: 'utf8', env: { ...process.env } })
+      // Pass all environment variables to child process
+      const output = execSync(command, {
+        stdio: 'pipe',
+        encoding: 'utf8',
+        env: process.env,
+      })
       return { success: true, output: (output || '').trim() }
     } catch (error) {
       const output = error.stdout || error.stderr || error.message || 'Unknown error'
