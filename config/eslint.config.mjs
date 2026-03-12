@@ -72,6 +72,7 @@ const eslintConfig = [
       '**/.code-quality/**', // More specific pattern
       'eslint.config.mjs',
       'next.config.ts',
+      'next-env.d.ts', // Next.js environment types
       '.venv/',
     ],
   },
