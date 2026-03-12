@@ -80,7 +80,7 @@ function testClassInstantiation() {
 // Test 6: Bundled dependencies exist
 function testDependencies() {
   const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
-  
+
   // Check both dependencies and devDependencies for bundled tools
   const allDeps = { ...pkg.dependencies, ...pkg.devDependencies }
   if (!allDeps) throw new Error('No dependencies in package.json')

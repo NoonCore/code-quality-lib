@@ -276,14 +276,14 @@ console.log(result.results) // per-tool results array
 
 ## Configuration Options
 
-| Option             | Type                                 | Default       | Description                                                                                 |
-| ------------------ | ------------------------------------ | ------------- | ------------------------------------------------------------------------------------------- |
-| `tools`            | `string[]`                           | All 5 tools   | Which tools to run (deprecated - use environments instead)                                    |
-| `packageManager`   | `'npm' \| 'bun' \| 'pnpm' \| 'yarn'` | auto-detected | Force a specific package manager                                                            |
-| `commands`         | `Record<string, string>`             | bundled paths | Custom commands per tool                                                                    |
-| `descriptions`     | `Record<string, string>`             | built-in      | Custom descriptions per tool                                                                |
-| `environment`      | `string`                             | auto-detected | Override environment (development, ci, production)                                          |
-| `environments`     | `Record<string, EnvironmentConfig>`  | -             | Environment-specific tool configurations                                                    |
+| Option           | Type                                 | Default       | Description                                                |
+| ---------------- | ------------------------------------ | ------------- | ---------------------------------------------------------- |
+| `tools`          | `string[]`                           | All 5 tools   | Which tools to run (deprecated - use environments instead) |
+| `packageManager` | `'npm' \| 'bun' \| 'pnpm' \| 'yarn'` | auto-detected | Force a specific package manager                           |
+| `commands`       | `Record<string, string>`             | bundled paths | Custom commands per tool                                   |
+| `descriptions`   | `Record<string, string>`             | built-in      | Custom descriptions per tool                               |
+| `environment`    | `string`                             | auto-detected | Override environment (development, ci, production)         |
+| `environments`   | `Record<string, EnvironmentConfig>`  | -             | Environment-specific tool configurations                   |
 
 **EnvironmentConfig:**
 

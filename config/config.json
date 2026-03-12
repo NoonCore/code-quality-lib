@@ -2,11 +2,7 @@
   "packageManager": "bun",
   "environments": {
     "development": {
-      "tools": [
-        "ESLint",
-        "TypeScript",
-        "Prettier"
-      ]
+      "tools": ["ESLint", "TypeScript", "Prettier"]
     }
   }
 }
