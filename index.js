@@ -1180,7 +1180,7 @@ async function runWizard() {
     try {
       require('child_process').execSync('snyk --version', { stdio: 'ignore' })
       console.log('✅ Snyk is already installed')
-    } catch (_e) {
+    } catch (e) {
       console.log('📦 Installing Snyk...')
       try {
         const pm = detectPackageManager()

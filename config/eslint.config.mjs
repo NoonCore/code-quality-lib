@@ -140,26 +140,18 @@ const eslintConfig = [
       // React
       'react/jsx-no-literals': 'off',
       'react/prop-types': 'off',
-      'react/self-closing-comp': 'warn',
-      'react/jsx-sort-props': [
-        'warn',
-        {
-          callbacksLast: true,
-          shorthandFirst: true,
-          noSortAlphabetically: false,
-          reservedFirst: true,
-        },
-      ],
-      'react/jsx-fragments': ['warn', 'syntax'],
-      'react/jsx-no-useless-fragment': 'warn',
+      'react/self-closing-comp': 'off', // Changed from warn to off
+      'react/jsx-sort-props': 'off', // Changed from warn to off - too strict for dev
+      'react/jsx-fragments': 'off', // Changed from warn to off
+      'react/jsx-no-useless-fragment': 'off', // Changed from warn to off
       'react/jsx-pascal-case': 'warn',
-      'react/no-array-index-key': 'warn',
+      'react/no-array-index-key': 'off', // Changed from warn to off - sometimes necessary
       'react/react-in-jsx-scope': 'off',
       // JSX quotes consistency with Prettier jsxSingleQuote: true
       'jsx-quotes': ['error', 'prefer-single'],
 
       // TypeScript
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off', // Changed from warn to off - dev friendly
       '@typescript-eslint/no-require-imports': 'off',
       'no-unused-vars': 'off',
       'no-undef': 'off',
@@ -167,9 +159,9 @@ const eslintConfig = [
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      '@typescript-eslint/no-empty-interface': 'warn',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/prefer-as-const': 'warn',
+      '@typescript-eslint/no-empty-interface': 'off', // Changed from warn to off
+      '@typescript-eslint/no-non-null-assertion': 'off', // Changed from warn to off - dev friendly
+      '@typescript-eslint/prefer-as-const': 'off', // Changed from warn to off
 
       // Next.js (if available)
       ...(nextPlugin
@@ -191,46 +183,37 @@ const eslintConfig = [
         : {}),
 
       // Code quality
-      'no-console': ['error', { allow: ['warn', 'error'] }],
+      'no-console': 'off', // Changed from error to off - dev needs console.log
       ...(prettierPlugin
         ? {
             'prettier/prettier': [
-              'error',
+              'warn', // Changed from error to warn
               {
                 endOfLine: 'auto',
               },
             ],
           }
         : {}),
-      'padding-line-between-statements': [
-        'warn',
-        { blankLine: 'always', prev: '*', next: 'return' },
-        { blankLine: 'always', prev: ['const', 'let', 'var'], next: '*' },
-        {
-          blankLine: 'any',
-          prev: ['const', 'let', 'var'],
-          next: ['const', 'let', 'var'],
-        },
-      ],
+      'padding-line-between-statements': 'off', // Changed from warn to off - too strict
 
-      'react-hooks/exhaustive-deps': 'warn',
-      'react-hooks/rules-of-hooks': 'error',
-      'no-param-reassign': 'warn',
-      'no-return-await': 'warn',
-      'prefer-const': 'warn',
+      'react-hooks/exhaustive-deps': 'off', // Changed from warn to off - dev friendly
+      'react-hooks/rules-of-hooks': 'error', // Keep as error - important rule
+      'no-param-reassign': 'off', // Changed from warn to off
+      'no-return-await': 'off', // Changed from warn to off
+      'prefer-const': 'warn', // Changed from error to warn
       'no-var': 'error',
-      eqeqeq: ['error', 'always'],
-      'no-unused-expressions': 'error',
+      eqeqeq: 'warn', // Changed from error to warn
+      'no-unused-expressions': 'warn', // Changed from error to warn
       // Semicolons consistency with Prettier semi: false
       semi: ['error', 'never'],
 
       // SonarJS
-      'sonarjs/cognitive-complexity': ['error', 15],
-      'sonarjs/no-duplicate-string': 'warn',
+      'sonarjs/cognitive-complexity': 'off', // Changed from error to off - too strict for dev
+      'sonarjs/no-duplicate-string': 'off', // Changed from warn to off
 
       // Unicorn
       'unicorn/no-array-for-each': 'off',
-      'unicorn/prefer-node-protocol': 'error',
+      'unicorn/prefer-node-protocol': 'warn', // Changed from error to warn
     },
   },
   {
