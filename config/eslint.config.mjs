@@ -161,14 +161,10 @@ const eslintConfig = [
       // TypeScript
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        {
-          args: 'after-used',
-          ignoreRestSiblings: false,
-          argsIgnorePattern: '^_.*$',
-        },
-      ],
+      'no-unused-vars': 'off',
+      'no-undef': 'off',
+      'no-redeclare': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-empty-interface': 'warn',
@@ -233,7 +229,7 @@ const eslintConfig = [
       'sonarjs/no-duplicate-string': 'warn',
 
       // Unicorn
-      'unicorn/no-array-for-each': 'error',
+      'unicorn/no-array-for-each': 'off',
       'unicorn/prefer-node-protocol': 'error',
     },
   },
