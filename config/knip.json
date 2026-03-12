@@ -1,6 +1,6 @@
 {
-  "entry": ["index.js"],
-  "project": ["*.js"],
+  "entry": ["src/**/*.{js,jsx,ts,tsx}"],
+  "project": ["src/**/*.{js,jsx,ts,tsx}"],
   "ignore": [
     "node_modules/**",
     "dist/**",
@@ -12,8 +12,13 @@
     "**/*.test.*",
     "**/*.spec.*",
     "examples/**",
-    ".code-quality/**",
-    "**/*.d.ts"
+    ".code-quality/eslint.config.mjs",
+    ".code-quality/tsconfig.json",
+    ".code-quality/prettier*",
+    ".code-quality/config.json",
+    "**/*.d.ts",
+    ".next/**",
+    "out/**"
   ],
   "ignoreBinaries": ["code-quality"],
   "ignoreDependencies": [
@@ -25,6 +30,7 @@
     "typescript",
     "knip",
     "snyk",
-    "dotenv"
+    "dotenv",
+    "@next/eslint-plugin-next"
   ]
 }

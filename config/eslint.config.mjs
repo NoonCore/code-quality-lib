@@ -14,7 +14,7 @@ let jsxA11yPlugin
 let prettierPlugin
 
 try {
-  const nextModule = await import('eslint-plugin-next')
+  const nextModule = await import('@next/eslint-plugin-next')
   nextPlugin = nextModule.default || nextModule
 } catch {
   // Next.js plugin not installed, skip Next.js rules
