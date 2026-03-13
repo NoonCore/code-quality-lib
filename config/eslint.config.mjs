@@ -1,16 +1,25 @@
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+
 import js from '@eslint/js'
 import typescript from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
-import prettier from 'eslint-config-prettier'
 import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import sonarjs from 'eslint-plugin-sonarjs'
 import unicorn from 'eslint-plugin-unicorn'
 
 // Import optional plugins - these may or may not be installed
+let storybookPlugin
 let nextPlugin
 let jsxA11yPlugin
 let prettierPlugin
+
+try {
+  const storybookModule = await import('@storybook/eslint-plugin')
+  storybookPlugin = storybookModule.default || storybookModule
+} catch {
+  // Storybook plugin not installed, skip Storybook rules
+}
 
 try {
   const nextModule = await import('@next/eslint-plugin-next')
@@ -63,6 +72,8 @@ const eslintConfig = [
       'Thumbs.db',
       '.vscode/',
       '.idea/',
+      '.storybook/',
+      '**/.storybook/**',
       'tmp/',
       'temp/',
       '*.tmp',
@@ -77,6 +88,7 @@ const eslintConfig = [
     ],
   },
   js.configs.recommended,
+  ...(storybookPlugin ? storybookPlugin.configs['flat/recommended'] : []),
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
@@ -242,7 +254,6 @@ const eslintConfig = [
       'no-restricted-syntax': 'off',
     },
   },
-  prettier,
 ]
 
 export default eslintConfig
