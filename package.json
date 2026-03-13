@@ -10,7 +10,8 @@
   "scripts": {
     "test": "node test/basic.test.js",
     "start": "node index.js",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test",
+    "test-release": "node scripts/test-release.js"
   },
   "keywords": [
     "code-quality",
